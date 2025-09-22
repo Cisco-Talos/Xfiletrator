@@ -1,0 +1,45 @@
+Name: tool-name
+Category: third-party | native | cloud-based
+Platform:
+- Windows
+- Linux
+- macOS
+Execution:
+- cli | gui | api
+Capabilities:
+- file-transfer
+- encrypted-transfer
+- cloud-sync
+- background-execution
+Stealth:
+- masquerading
+- encrypted-transfer
+- api-based-transfer
+- background-execution
+Forensics:
+  BinaryLocations:
+  - Path(s) where the binary may be found
+  ConfigFiles:
+  - Path(s) to configuration files
+  RegistryKeys:
+  - Registry keys modified or used (Windows only)
+  ScheduledTask: true | false
+  LogFiles:
+  - Log file locations, if applicable
+  CommandLineArgs:
+  - Command-line arguments used during exfiltration
+  NetworkArtifacts:
+  - Observable network behaviors (e.g., TLS, IPs, UA strings)
+ThreatActors:
+- ExampleThreatActor1
+- ExampleThreatActor2
+References:
+- https://example.com/reference
+Tags:
+- ransomware
+- exfiltration
+- third-party
+- cloud-based
+- cli
+- encrypted-transfer
+- masquerading

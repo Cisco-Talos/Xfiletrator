@@ -1,0 +1,30 @@
+import os
+import json
+
+# Define paths based on current project structure
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+YML_DIR = os.path.join(ROOT_DIR, "yml")
+OUTPUT_PATH = os.path.join(ROOT_DIR, "exfiltration-ui", "public", "yml", "index.json")
+
+# Gather all .yml files (exclude schema/template/tag files)
+excluded_files = {
+    "YML-Schema.yml",
+    "YML-Template.yml",
+    "Allowed-Tags-and-Categories.yml"
+}
+
+yml_files = sorted([
+    f for f in os.listdir(YML_DIR)
+    if f.endswith(".yml") and f not in excluded_files
+])
+
+# Ensure output directory exists
+os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
+
+# Write index.json
+with open(OUTPUT_PATH, "w") as f:
+    json.dump(yml_files, f, indent=2)
+
+print(f"Generated index.json with {len(yml_files)} tools:")
+for name in yml_files:
+    print(f" - {name}")

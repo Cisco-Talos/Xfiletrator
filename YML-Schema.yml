@@ -1,0 +1,89 @@
+type: object
+required:
+- Name
+- Category
+- Platform
+- Execution
+- Capabilities
+- Stealth
+- Forensics
+- Tags
+properties:
+  Name:
+    type: string
+  Category:
+    type: string
+    enum:
+    - native
+    - third-party
+    - cloud-based
+  Platform:
+    type: array
+    items:
+      type: string
+      enum:
+      - Windows
+      - Linux
+      - macOS
+  Execution:
+    type: array
+    items:
+      type: string
+      enum:
+      - cli
+      - gui
+      - api
+  Capabilities:
+    type: array
+    items:
+      type: string
+  Stealth:
+    type: array
+    items:
+      type: string
+  Forensics:
+    type: object
+    required:
+    - BinaryLocations
+    - ConfigFiles
+    - ScheduledTask
+    properties:
+      BinaryLocations:
+        type: array
+        items:
+          type: string
+      ConfigFiles:
+        type: array
+        items:
+          type: string
+      RegistryKeys:
+        type: array
+        items:
+          type: string
+      ScheduledTask:
+        type: boolean
+      LogFiles:
+        type: array
+        items:
+          type: string
+      CommandLineArgs:
+        type: array
+        items:
+          type: string
+      NetworkArtifacts:
+        type: array
+        items:
+          type: string
+  ThreatActors:
+    type: array
+    items:
+      type: string
+  References:
+    type: array
+    items:
+      type: string
+      format: uri
+  Tags:
+    type: array
+    items:
+      type: string

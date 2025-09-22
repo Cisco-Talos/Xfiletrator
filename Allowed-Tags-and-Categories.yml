@@ -1,0 +1,92 @@
+# =========================
+# CATEGORIES: General classification of the tool's origin or deployment model
+# =========================
+categories:
+  - native              # Built into the OS (e.g., PowerShell, certutil)
+  - third-party         # Tools developed independently from the OS (e.g., rclone, curl)
+  - cloud-based         # Tools designed for use with cloud services or platforms (e.g., AWS CLI, Dropbox API)
+
+# =========================
+# PLATFORMS: Operating systems supported by the tool
+# =========================
+platforms:
+  - windows             # Microsoft Windows
+  - linux               # Linux distributions
+  - macos               # Apple macOS
+
+# =========================
+# EXECUTION: How the tool is typically executed or interfaced with
+# =========================
+execution:
+  - cli                 # Command-line interface
+  - gui                 # Graphical user interface
+  - api                 # API-based usage (e.g., REST API, SDK)
+  - powershell          # PowerShell-based execution
+  - script              # Invoked via script (e.g., batch, bash, ps1)
+  - remote-access       # Can initiate/control remote access (e.g., AnyDesk)
+
+# =========================
+# CAPABILITIES: Functional capabilities relevant to exfiltration
+# =========================
+capabilities:
+  - file-sync              # Continuous folder synchronization (e.g., Syncthing, rclone in sync mode)
+  - encrypted-transfer     # Supports encryption during file transfer
+  - cloud-sync             # Sync with cloud storage platforms
+  - api-based-transfer     # File transfers initiated via API
+  - background-execution   # Runs persistently or in background without user interaction
+  - stealth-upload         # Designed or abused to quietly upload without alerting the user
+  - remote-access          # Provides full remote access capabilities
+  - direct-to-cloud        # Uploads directly to cloud endpoints without local storage
+  - protocol-tunneling     # Can be used to tunnel traffic over other protocols (e.g., HTTP, DNS)
+
+# =========================
+# STEALTH: Tactics/tools may use to hide behavior or avoid detection
+# =========================
+stealth:
+  - masquerading              # Disguising the tool as a legitimate file or process
+  - encrypted-transfer        # Use of encrypted channels (e.g., TLS) to avoid inspection
+  - api-based-transfer        # Using cloud APIs to mimic legitimate user activity
+  - background-execution      # Running silently in the background
+  - proxy-support             # Can use proxies to hide real IP/destination
+  - port-obfuscation          # Uses non-standard ports or port-hopping
+  - user-agent-manipulation   # Spoofs or manipulates user-agent headers
+  - scriptable-execution      # Easily embedded in larger scripts or malicious chains
+
+# =========================
+# FORENSICS: Artifacts and indicators that may appear on a compromised system
+# =========================
+forensics:
+  - custom-config-location    # Uses or allows non-default config file paths
+  - scheduled-task            # Can be triggered via Windows Task Scheduler or cron
+  - registry-persistence      # Persists in Windows Registry (e.g., Run keys)
+  - auto-start-entry          # Creates entries to auto-launch at startup
+  - logs-artifacts            # Leaves logs or known traces
+  - known-binary-locations    # Binary typically resides in a known location
+  - suspicious-command-line   # Invoked with arguments commonly seen in attacks
+  - tls-connection            # Initiates encrypted connections over TLS
+
+# =========================
+# THREAT ACTORS: Types of actors known to abuse the tool
+# =========================
+threat-actors:
+  - apt              # Advanced Persistent Threat groups
+  - ransomware       # Ransomware gangs or affiliates
+  - redteam          # Used in red teaming / adversary simulation
+  - pentest-tool     # Known or intended for penetration testing
+  - commodity        # Widely used, freely available malware or toolset
+
+# =========================
+# TAGS: Freeform labels for UI filtering or detection enrichment
+# =========================
+tags:
+  - cloud-based             # Tool interacts with or targets cloud services
+  - native                  # Shipped with the OS
+  - third-party             # Externally sourced binary
+  - gui                     # Has a graphical interface
+  - cli                     # Command-line based
+  - encrypted-transfer      # Uses TLS or other encrypted methods
+  - masquerading            # Often renamed to blend in
+  - persistent              # Capable of establishing persistence
+  - stealth                 # Designed or abused for stealthy operation
+  - scriptable              # Easily embedded in scripts or chained workflows
+  - common-lolbas           # Also appears in LOLBAS / Living-Off-the-Land reference lists

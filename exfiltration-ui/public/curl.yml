@@ -1,0 +1,63 @@
+Name: curl
+Aliases:
+  - cURL
+  - libcurl
+  - curl.exe
+Description: >
+  curl is a native command-line tool used to transfer data using various network protocols, including HTTP, HTTPS, FTP, and more.
+  It is commonly pre-installed on Unix-like systems and is also available on Windows by default. Adversaries use curl to exfiltrate data
+  by sending HTTP(S) POST requests, uploading to attacker-controlled servers, or interacting with cloud storage endpoints.
+
+Category: native
+Platform:
+  - Windows
+  - Linux
+  - macOS
+Execution:
+  - cli
+Capabilities:
+  - HTTP-request              # Allows manual or scripted HTTP communication
+  - HTTPS-request             # Encrypted web requests supported
+  - command-line-usage        # CLI usage for scripting and automation
+  - silent-execution          # Can suppress output for stealth
+  - header-manipulation       # Allows custom headers to disguise traffic
+Stealth:
+  - native-binary             # Pre-installed on most systems
+  - user-agent-manipulation   # Can impersonate other tools/browsers via headers
+  - proxy-aware               # Supports proxy config for evasion
+  - silent-execution
+Forensics:
+  BinaryLocations:
+    - /usr/bin/curl
+    - C:\Windows\System32\curl.exe
+  ConfigFiles:
+    - '~/.curlrc'
+    - 'C:\Users\<user>\.curlrc'
+  ScheduledTask: false
+  CommandLineArgs:
+    - --data
+    - --upload-file
+    - --request
+    - --header
+  NetworkArtifacts:
+    - HTTP/HTTPS traffic with custom headers
+    - DNS queries for remote servers
+    - Potential POST uploads or PUT requests
+ThreatActors:
+  - LockBit
+  - BlackBasta
+  - FIN7
+  - APT-C-36
+References:
+  - https://attack.mitre.org/software/S0660/
+  - https://github.com/redcanaryco/atomic-red-team/blob/master/atomics/T1041/T1041.md
+Tags:
+  - native
+  - cli
+  - http
+  - https
+  - header-manipulation
+  - silent-execution
+  - user-agent-manipulation
+  - proxy-aware
+LastModified: 2025-09-19

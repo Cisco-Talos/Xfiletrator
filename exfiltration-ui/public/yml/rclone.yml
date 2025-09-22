@@ -1,0 +1,55 @@
+Name: rclone
+Description: |
+  Rclone is a powerful command-line program used to manage files on cloud storage.
+  It supports over 40 cloud storage providers (like S3, GDrive, Dropbox), and is often
+  abused by threat actors to exfiltrate data to attacker-controlled remote buckets.
+  It allows encrypted transfer, background execution, and fine-grained control over file syncs.
+
+Category: third-party
+Platform:
+  - Windows
+  - Linux
+  - macOS
+Execution:
+  - cli
+Capabilities:
+  - cloud-sync                 # Bi-directional or scheduled syncs between local and cloud storage
+  - encrypted-transfer         # Supports encrypted transport and at-rest encryption
+  - background-execution       # Can be daemonized or run silently in the background
+Stealth:
+  - masquerading               # Can be renamed to mimic legitimate utilities
+  - encrypted-transfer         # Encryption hinders detection via DPI or logs
+  - api-based-transfer         # Uses APIs instead of mount/drive-level interaction
+  - background-execution       # Operates without user interaction
+Forensics:
+  BinaryLocations:
+    - '%TEMP%\rclone.exe'
+    - 'C:\Users\<user>\Downloads\rclone.exe'
+  ConfigFiles:
+    - '~/.config/rclone/rclone.conf'
+    - 'C:\Users\<user>\.config\rclone\rclone.conf'
+  RegistryKeys:
+    - 'HKCU\Software\Microsoft\Windows\CurrentVersion\Run'
+  ScheduledTask: true
+  LogFiles:
+    - rclone.log
+  CommandLineArgs:
+    - --config
+    - --drive-chunk-size
+    - --transfers
+  NetworkArtifacts:
+    - TLS connections to cloud providers (S3, GDrive, etc.)
+    - Known User-Agent headers
+ThreatActors:
+  - conti
+  - lockbit
+  - alphv
+References:
+  - https://thedfirreport.com/2022/05/30/blackbyte-ransomware-infiltrates-and-exfiltrates-via-rclone/
+Tags:
+  - ransomware
+  - third-party
+  - cli
+  - encrypted-transfer
+  - masquerading
+LastModified: 2025-09-19
