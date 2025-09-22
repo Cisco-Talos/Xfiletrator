@@ -53,13 +53,13 @@ brew install node                                     # macOS with Homebrew
 ## Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/exfiltration-framework.git
+git clone https://github.com/cisco-sbg/exfiltration-framework
 cd exfiltration-framework
 ```
 
 ---
 
-## Python Virtual Environment Setup (for YAML validation)
+## Python Virtual Environment Setup
 
 ```bash
 # Create virtual environment
