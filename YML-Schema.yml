@@ -33,6 +33,7 @@ properties:
       - cli
       - gui
       - api
+      - script
   Capabilities:
     type: array
     items:

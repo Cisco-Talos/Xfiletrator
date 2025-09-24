@@ -21,19 +21,15 @@ execution:
   - cli                 # Command-line interface
   - gui                 # Graphical user interface
   - api                 # API-based usage (e.g., REST API, SDK)
-  - powershell          # PowerShell-based execution
   - script              # Invoked via script (e.g., batch, bash, ps1)
-  - remote-access       # Can initiate/control remote access (e.g., AnyDesk)
 
 # =========================
 # CAPABILITIES: Functional capabilities relevant to exfiltration
 # =========================
 capabilities:
   - file-sync              # Continuous folder synchronization (e.g., Syncthing, rclone in sync mode)
-  - encrypted-transfer     # Supports encryption during file transfer
   - cloud-sync             # Sync with cloud storage platforms
   - api-based-transfer     # File transfers initiated via API
-  - background-execution   # Runs persistently or in background without user interaction
   - stealth-upload         # Designed or abused to quietly upload without alerting the user
   - remote-access          # Provides full remote access capabilities
   - direct-to-cloud        # Uploads directly to cloud endpoints without local storage
@@ -46,11 +42,11 @@ stealth:
   - masquerading              # Disguising the tool as a legitimate file or process
   - encrypted-transfer        # Use of encrypted channels (e.g., TLS) to avoid inspection
   - api-based-transfer        # Using cloud APIs to mimic legitimate user activity
-  - background-execution      # Running silently in the background
+  - background-execution      # Running silently in the background or without user interaction
   - proxy-support             # Can use proxies to hide real IP/destination
   - port-obfuscation          # Uses non-standard ports or port-hopping
   - user-agent-manipulation   # Spoofs or manipulates user-agent headers
-  - scriptable-execution      # Easily embedded in larger scripts or malicious chains
+  - scriptable                # Easily embedded in larger scripts or malicious chains
 
 # =========================
 # FORENSICS: Artifacts and indicators that may appear on a compromised system
@@ -61,7 +57,7 @@ forensics:
   - registry-persistence      # Persists in Windows Registry (e.g., Run keys)
   - auto-start-entry          # Creates entries to auto-launch at startup
   - logs-artifacts            # Leaves logs or known traces
-  - known-binary-locations    # Binary typically resides in a known location
+  - known-binary-location     # Binary typically resides in a known location
   - suspicious-command-line   # Invoked with arguments commonly seen in attacks
   - tls-connection            # Initiates encrypted connections over TLS
 
@@ -79,14 +75,9 @@ threat-actors:
 # TAGS: Freeform labels for UI filtering or detection enrichment
 # =========================
 tags:
-  - cloud-based             # Tool interacts with or targets cloud services
-  - native                  # Shipped with the OS
-  - third-party             # Externally sourced binary
-  - gui                     # Has a graphical interface
-  - cli                     # Command-line based
-  - encrypted-transfer      # Uses TLS or other encrypted methods
-  - masquerading            # Often renamed to blend in
-  - persistent              # Capable of establishing persistence
-  - stealth                 # Designed or abused for stealthy operation
-  - scriptable              # Easily embedded in scripts or chained workflows
-  - common-lolbas           # Also appears in LOLBAS / Living-Off-the-Land reference lists
+  - stealth                  # Generic stealth indicator
+  - commonly-used            # Frequently found in real-world incidents
+  - lolbas                   # Appears in LOLBAS or similar reference lists
+  - cloud-tool               # Associated with cloud service interaction
+  - remote-execution         # Enables control or execution from a remote host
+  - persistence              # Capable of maintaining persistence on the system

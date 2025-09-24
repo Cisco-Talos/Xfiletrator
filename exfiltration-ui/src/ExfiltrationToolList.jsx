@@ -82,10 +82,25 @@ export default function ExfiltrationToolList() {
               ))}
             </div>
           )}
+          {tool.UseCases?.length > 0 && (
+            <div className="mt-4">
+              <h3 className="font-semibold text-sm mb-2">Exfiltration Use Cases:</h3>
+              <ul className="space-y-3 text-sm">
+                {tool.UseCases.map((useCase, idx) => (
+                  <li key={idx} className="bg-gray-100 p-2 rounded">
+                    <p className="font-medium">{useCase.Title}</p>
+                    <p className="italic text-gray-600">{useCase.Description}</p>
+                    <pre className="bg-white p-2 mt-1 rounded border text-xs whitespace-pre-wrap">
+                      {useCase.Command}
+                    </pre>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       ))}
     </div>
   </div>
  );
 }
-
