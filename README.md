@@ -1,4 +1,4 @@
-# Exfiltration Framework
+# Xfiletrator: The Exfiltration Mapping Framework
 
 A structured framework to document and analyze benign tools abused for data exfiltration.  
 It highlights detection-relevant features, stealth techniques, and forensic artifacts to support threat hunting, detection engineering, and post-incident analysis.
