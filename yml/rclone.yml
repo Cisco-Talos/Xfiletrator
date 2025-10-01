@@ -48,7 +48,7 @@ Forensics:
   ConfigFiles:
     - C:\Users\<username>\AppData\Roaming\rclone\rclone.conf
     - ~/.config/rclone/rclone.conf
-  ScheduledTask: false
+  ScheduledTask: []
 ThreatActors:
   - REvil
   - Quantum

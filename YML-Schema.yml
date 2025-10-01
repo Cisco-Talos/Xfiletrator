@@ -44,29 +44,22 @@ properties:
       type: string
   Forensics:
     type: object
-    required:
-    - BinaryLocations
-    - ConfigFiles
-    - ScheduledTask
     properties:
       BinaryLocations:
         type: array
-        items:
-          type: string
+        items: { type: string }
       ConfigFiles:
         type: array
-        items:
-          type: string
-      RegistryKeys:
-        type: array
-        items:
-          type: string
+        items: { type: string }
       ScheduledTask:
-        type: boolean
+        type: array
+        items: { type: string }
+      RegistryPersistence:
+        type: array
+        items: { type: string }    
       LogFiles:
         type: array
-        items:
-          type: string
+        items: { type: string }
       CommandLineArgs:
         type: array
         items:
