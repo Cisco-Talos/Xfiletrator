@@ -1,4 +1,6 @@
 [
   "curl.yml",
-  "rclone.yml"
+  "powershell.yml",
+  "rclone.yml",
+  "syncthing.yml"
 ]

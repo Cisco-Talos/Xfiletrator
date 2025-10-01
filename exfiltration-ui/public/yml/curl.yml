@@ -51,7 +51,7 @@ Forensics:
   ConfigFiles:
     - ~/.curlrc
     - C:\Users\<user>\.curlrc
-  ScheduledTask: false
+  ScheduledTask: []
 ThreatActors:
   - LockBit
   - BlackBasta
