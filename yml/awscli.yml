@@ -91,5 +91,5 @@ Detection:
   - Type: Command-Line Abuse
     Description: Flag the use of the `--endpoint-url` argument with suspicious hostnames or IPs outside of approved enterprise infrastructure, which may indicate redirection to attacker-controlled storage.
 
-LastModified: 2025-10-20
+LastModified: "2025-10-20"
 

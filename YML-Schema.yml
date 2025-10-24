@@ -1,39 +1,30 @@
+$schema: "http://json-schema.org/draft-07/schema#"
 type: object
 required:
-- Name
-- Category
-- Platform
-- Execution
-- Capabilities
-- Stealth
-- Forensics
-- Tags
+  - Name
+  - Description
 properties:
   Name:
     type: string
+  Aliases:
+    type: array
+    items:
+      type: string
+  Description:
+    type: string
   Category:
     type: string
-    enum:
-    - native
-    - third-party
-    - cloud-based
+    enum: ["native", "third-party", "cloud", "cloud-based", "other"]
   Platform:
     type: array
     items:
       type: string
-      enum:
-      - Windows
-      - Linux
-      - macOS
+      enum: ["Windows", "Linux", "macOS"]
   Execution:
     type: array
     items:
       type: string
-      enum:
-      - cli
-      - gui
-      - api
-      - script
+      enum: ["cli", "gui", "api", "script", "powershell", "remote-access"]
   Capabilities:
     type: array
     items:
@@ -47,20 +38,39 @@ properties:
     properties:
       BinaryLocations:
         type: array
-        items: { type: string }
+        items:
+          type: string
+      CommandLineArgs:
+        type: array
+        items:
+          type: string
       ConfigFiles:
         type: array
-        items: { type: string }
+        items:
+          type: string
+      # ScheduledTask: can be boolean, string, array of strings, OR array of structured task objects
       ScheduledTask:
-        type: array
-        items: { type: string }
+        anyOf:
+          - type: boolean
+          - type: string
+          - type: array
+            items:
+              anyOf:
+                - type: string
+                - type: object
+                  required: ["Name", "Command"]
+                  properties:
+                    Name:
+                      type: string
+                    Description:
+                      type: string
+                    Command:
+                      type: string
       RegistryPersistence:
         type: array
-        items: { type: string }    
+        items:
+          type: string
       LogFiles:
-        type: array
-        items: { type: string }
-      CommandLineArgs:
         type: array
         items:
           type: string
@@ -68,6 +78,7 @@ properties:
         type: array
         items:
           type: string
+    additionalProperties: true
   ThreatActors:
     type: array
     items:
@@ -76,8 +87,33 @@ properties:
     type: array
     items:
       type: string
-      format: uri
   Tags:
     type: array
     items:
       type: string
+  UseCases:
+    type: array
+    items:
+      type: object
+      properties:
+        Title:
+          type: string
+        Description:
+          type: string
+        Command:
+          type: string
+      required: ["Title", "Command"]
+  Detection:
+    type: array
+    items:
+      type: object
+      properties:
+        Type:
+          type: string
+        Description:
+          type: string
+      required: ["Type", "Description"]
+  LastModified:
+    type: string
+additionalProperties: true
+

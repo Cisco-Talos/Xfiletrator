@@ -85,8 +85,16 @@ UseCases:
       wmic process call create "$env:APPDATA\S3Tools\s3browser-ui.exe"
 
 Detection:
-  - Monitor execution of s3browser-ui.exe or s3browser-cli.exe from user-writable directories such as %APPDATA%, %TEMP%, or %PUBLIC%.
-  - Alert on parent processes like PowerShell, cmd, or wmic launching S3 Browser.
-  - Watch for access to sensitive directories or AWS credentials prior to execution.
-  - Detect unexpected creation or modification of s3browser.settings.v4 outside Program Files paths.
-LastModified: 2025-10-17
+  - Type: Execution from non-standard paths
+    Description: Monitor execution of s3browser-ui.exe or s3browser-cli.exe from user-writable directories such as %APPDATA%, %TEMP%, or %PUBLIC%.
+
+  - Type: Suspicious parent process
+    Description: Alert on parent processes like PowerShell, cmd, or wmic launching S3 Browser, indicating potential post-exploitation usage.
+
+  - Type: File access behavior
+    Description: Watch for access to sensitive directories or AWS credentials shortly before or during execution of S3 Browser.
+
+  - Type: Settings file modification
+    Description: Detect unexpected creation or modification of s3browser.settings.v4 outside Program Files paths, which may indicate tampering or portable use.
+
+LastModified: "2025-10-17"

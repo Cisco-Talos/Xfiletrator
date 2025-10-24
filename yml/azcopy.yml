@@ -133,5 +133,5 @@ Detection:
   - Type: Post-Exfiltration Cleanup
     Description: Flag deletion of local source files immediately after successful AzCopy uploads, which may indicate attempts to remove forensic evidence following data exfiltration.
 
-LastModified: 2025-10-20
+LastModified: "2025-10-20"
 

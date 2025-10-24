@@ -90,4 +90,4 @@ UseCases:
     Command: |
       rclone copy \\192.168.1.100\f$ st:"/home/user/data" --max-age 1y
       --exclude "*.{iso,exe,zip}" --ignore-existing --auto-confirm -q --transfers 5 -P
-LastModified: 2025-09-18
+LastModified: "2025-09-18"

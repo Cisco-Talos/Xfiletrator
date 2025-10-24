@@ -52,4 +52,4 @@ UseCases:
   - Title: Masqueraded Syncthing binary
     Description: Masqueraded executable with renamed config and log paths for stealth startup.
     Command: svchost.exe --config config.json --logfile=NUL --no-console --no-browser
-LastModified: 2025-09-18
+LastModified: "2025-09-18"
