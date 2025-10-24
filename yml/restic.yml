@@ -1,0 +1,75 @@
+Name: Restic
+Description: >
+  Restic is an open-source, command-line backup tool known for its security, efficiency, and versatility. It supports various storage options, including local directories, SFTP servers, and cloud services like Amazon S3 and Google Cloud. Designed with strong encryption, Restic ensures all data is securely encrypted before storage, making it a popular tool for both legitimate backups and, unfortunately, data exfiltration.
+Category: third-party
+Platform:
+  - Windows
+  - Linux
+  - macOS
+Execution:
+  - cli
+  - gui
+Capabilities:
+  - file-transfer
+  - encrypted-transfer
+  - file-sync
+  - cloud-sync
+  - background-execution
+Stealth:
+  - masquerading
+  - encrypted-transfer
+  - background-execution
+Forensics:
+  BinaryLocations:
+    - C:\Program Files\restic\restic.exe
+    - C:\AppData\Local\restic\restic.exe
+    - /opt/homebrew/bin/restic
+    - /usr/local/bin/restic
+    - /usr/bin/restic
+  ConfigFiles:
+    - ~/.cache/restic
+    - ~/Library/Caches/restic
+    - C:\Users\<username>\AppData\Local\restic\<unique-repository-ID>
+  RegistryKeys: []
+  ScheduledTask:
+    - Windows Task Scheduler
+    - cron
+    - systemd
+    - launchd
+  LogFiles: []
+  CommandLineArgs:
+    - -r
+    - rest://<domain or IP> 
+    - sftp://<domain or IP> 
+    - —use-fs-snapshot
+    - backup
+    - —password-file
+  NetworkArtifacts:
+    - unusual destination
+    - spike in bytes_out in unusual time
+    - connection not from HTTPS, SSH or API port
+    - new unexpected network connections
+    - authentication and access logs
+ThreatActors:
+  - ransomware
+  - apt
+References:
+  - https://restic.net/
+  - https://symantec-enterprise-blogs.security.com/threat-intelligence/ransomware-data-exfiltration
+  - https://www.esentire.com/blog/nitrogen-campaign-2-0-reloads-with-enhanced-capabilities-leading-to-alphv-blackcat-ransomware
+  - https://github.com/restic/rest-server/releases
+  - https://restic.readthedocs.io/en/v0.4.0/Manual/#create-a-rest-server-repository
+  - https://www.huntress.com/blog/using-backup-utilities-for-data-exfiltration
+  - https://github.com/mthcht/ThreatHunting-Keywords-yara-rules/blob/main/yara_rules/greyware_tool_keyword/R-T/restic.yara
+  - https://restic.readthedocs.io/en/latest/030_preparing_a_new_repo.html
+  - https://restic.readthedocs.io/en/latest/080_examples.html#setting-up-restic-with-amazon-s3
+  - https://symantec-enterprise-blogs.security.com/threat-intelligence/noberus-blackcat-ransomware-ttps
+  - https://cisco-sbg.atlassian.net/wiki/spaces/XDRDAP/pages/678101060/Exfiltration+Matrix
+Tags:
+  - ransomware
+  - exfiltration
+  - third-party
+  - cloud-based
+  - cli
+  - encrypted-transfer
+  - masquerading
