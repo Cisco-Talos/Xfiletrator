@@ -1,6 +1,9 @@
 [
+  "awscli.yml",
+  "azcopy.yml",
   "curl.yml",
   "powershell.yml",
   "rclone.yml",
+  "s3browser.yml",
   "syncthing.yml"
 ]

