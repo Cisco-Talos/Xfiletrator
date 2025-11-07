@@ -1,55 +1,112 @@
 Name: Syncthing
-Description: Cross-platform tool for continuous file synchronization, also used in malicious campaigns such as SickSync.
+Description: >
+  Syncthing is an open-source file synchronization tool that securely syncs files between devices over the internet or local network.
+  It has been observed in real-world attacks being repurposed by adversaries for automated, stealthy data exfiltration.
+  Once configured, Syncthing can silently synchronize sensitive data with remote attacker-controlled hosts.
+
 Category: third-party
 Platform:
   - Windows
   - Linux
   - macOS
 Execution:
-  - cli
   - gui
-Capabilities:
-  - file-sync
-  - background-execution
-  - stealth-upload
-Stealth:
-  - masquerading
-  - background-execution
-Forensics:
-  custom-config-location:
-    - "C:\\Users\\<user>\\AppData\\Roaming\\Syncthing\\config.xml"
-    - "~/.config/syncthing/config.xml"
-  scheduled-task:
-    - "Windows Task Scheduler via SyncTrayzor autostart"
-    - "Linux systemd service (e.g., syncthing@.service)"
-  registry-persistence:
-    - "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\Syncthing"
-  BinaryLocations:
-    - "C:\\Program Files\\Syncthing\\syncthing.exe"
-    - "C:\\Users\\<user>\\AppData\\Local\\Syncthing\\syncthing.exe"
-    - "/usr/bin/syncthing"
-    - "/usr/local/bin/syncthing"
-    - "/Applications/Syncthing.app/Contents/MacOS/Syncthing"
-  ConfigFiles:
-    - "C:\\Users\\<user>\\AppData\\Roaming\\Syncthing\\config.xml"
-    - "~/.config/syncthing/config.xml"
-  ScheduledTask:
-    - "Windows Task Scheduler: SyncTrayzor Autostart"
-    - "Linux: systemd service (syncthing@.service)"
-  RegistryPersistence:
-    - "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\Syncthing"
-Tags:
-  - stealth
-  - commonly-used
-  - remote-execution
-ThreatActors:
-  - apt
-UseCases:
-  - Title: Silent startup using config file
-    Description: Runs Syncthing using a hidden console, without browser, and accepting newer config versions.
-    Command: syncthing.exe --no-console --no-browser --allow-newer-config --logfile=NUL
+  - cli
 
-  - Title: Masqueraded Syncthing binary
-    Description: Masqueraded executable with renamed config and log paths for stealth startup.
-    Command: svchost.exe --config config.json --logfile=NUL --no-console --no-browser
-LastModified: "2025-09-18"
+Capabilities:
+  - file-sync              # Continuously synchronizes files and folders across devices.
+  - peer-to-peer           # Direct device-to-device communication.
+  - encrypted-transfer     # TLS encryption over public/unknown networks.
+  - remote-access          # Syncs data with devices not physically present.
+  - silent-execution       # Can run hidden in background without user interaction.
+
+Forensics:
+  BinaryLocations:
+    - C:\Program Files\Syncthing\syncthing.exe
+    - C:\Users\<user>\AppData\Local\Syncthing\syncthing.exe
+    - /usr/bin/syncthing
+    - /usr/local/bin/syncthing
+  FileNamePatterns:
+    - syncthing.exe
+    - syncthing
+  CommandLineArgs:
+    - --no-console              # Suppress console window on Windows
+    - --no-browser              # Do not auto-open the GUI in browser
+    - --allow-newer-config      # Accept config from a newer version
+    - --logfile                 # Custom log path
+  ConfigFiles:
+    - C:\Users\<user>\AppData\Local\Syncthing\config.xml
+    - ~/.config/syncthing/config.xml
+  RegistryPersistence:
+    - HKCU\Software\Microsoft\Windows\CurrentVersion\Run\Syncthing
+  LogFiles:
+    - C:\Users\<user>\AppData\Local\Syncthing\syncthing.log
+    - ~/.config/syncthing/syncthing.log
+  ScheduledTask:
+    - Name: SyncthingAutostart
+      Description: Syncthing added to autostart via Task Scheduler to persist after reboot.
+      Command: 'C:\Users\<user>\AppData\Local\Syncthing\syncthing.exe --no-console'
+  NetworkArtifacts:
+    Description: >
+      Syncthing uses dynamic IP discovery and syncs via TLS-encrypted channels. Detection opportunities include
+      observing unusual peer devices, connections to suspicious IPs, or high volume transfers over unexpected ports.
+    Indicators:
+      - Outbound traffic on port 22000 (TCP) or 22067 (UDP)
+      - Syncthing protocol activity over TLS (default)
+      - High bytes_out to new external peers
+      - Connection to unknown Syncthing device ID/IP
+
+ThreatActors:
+  - ransomware
+  - apt
+
+UseCases:
+  - Title: Silent Execution with Modified Config
+    Description: >
+      Syncthing is launched using flags to avoid console and browser popups. May indicate automated or hidden execution.
+    Command: |
+      syncthing.exe --no-console --no-browser
+
+  - Title: Modified Log File Path
+    Description: >
+      Specify a custom log path to avoid writing to default location, hiding operational traces.
+    Command: |
+      syncthing.exe --logfile "C:\Users\<user>\AppData\Temp\hidden.log"
+
+  - Title: Added Device for Exfil
+    Description: >
+      A new, unauthorized peer device is added to sync sensitive folders.
+    Command: |
+      Modified config.xml to include attacker-controlled device ID
+
+  - Title: Scheduled Execution for Persistence
+    Description: >
+      Syncthing is configured as a scheduled task to ensure persistence across reboots.
+    Command: |
+      schtasks /Create /TN "SystemUpdate" /TR "syncthing.exe --no-console" /SC ONLOGON /RL HIGHEST
+
+Detection:
+  - Type: Suspicious Command-Line Options
+    Description: >
+      Monitor use of `--no-console`, `--logfile`, or `--allow-newer-config` which may indicate silent execution or tampering.
+
+  - Type: New Device Synchronization
+    Description: >
+      Alert on synchronization with new devices not previously seen in the network or peer list.
+
+  - Type: High Volume Sync Activity
+    Description: >
+      Flag high data transfer rates to external IPs over ports 22000/22067 — typical for exfiltration via Syncthing.
+
+  - Type: Parent Process Anomaly
+    Description: >
+      Detect Syncthing launched by unexpected parent processes (e.g., wscript, powershell, onenote).
+
+References:
+  - https://rclone.org/commands/rclone_config/
+  - https://thedfirreport.com/2023/04/03/malicious-iso-file-leads-to-domain-wide-ransomware/
+  - https://github.com/redcanaryco/atomic-red-team/blob/master/atomics/T1567.002/T1567.002.md
+  - https://attack.mitre.org/techniques/T1567/002/
+  - https://www.huntress.com/blog/using-backup-utilities-for-data-exfiltration
+
+LastModified: "2025-10-30"

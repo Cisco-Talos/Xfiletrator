@@ -1,7 +1,7 @@
 # Xfiletrator: The Exfiltration Mapping Framework
 
-A structured framework to document and analyze benign tools abused for data exfiltration.  
-It highlights detection-relevant features, stealth techniques, and forensic artifacts to support threat hunting, detection engineering, and post-incident analysis.
+A structured framework to document and analyze benign tools abused for data exfiltration.
+It highlights detection-relevant features and forensic artifacts to support threat hunting, detection engineering, and post-incident analysis.
 
 ---
 
@@ -19,30 +19,18 @@ Each tool is documented in its own YAML file, located in the `/yml/` directory. 
 
 - Tool metadata (name, category, platform, execution method)
 - Capabilities relevant to exfiltration
-- Stealth techniques used to avoid detection
 - Forensic artifacts left on disk or in memory
 - Threat actor usage and external references
-- Tags to support filtering and grouping
 
 This format is designed to support both human review and programmatic consumption (e.g., frontends, automation, detection generation).
 
 ---
 
 ## Repository Layout
+
 ```
 exfiltration-framework/
 ├── yml/                      # One YAML file per tool, structured for parsing
-│   ├── rclone.yml
-│   ├── curl.yml
-│   ├── powershell.yml
-│   ├── wget.yml
-│   ├── pscp.yml
-│   ├── azcopy.yml
-│   ├── aws-cli.yml
-│   ├── dropbox-cli.yml
-│   ├── syncthing.yml
-│   └── s3browser.yml
-│
 ├── LICENSE                   # Apache License 2.0
 ├── README.md                 # Project overview and usage
 ├── CONTRIBUTING.md           # Contribution guidelines
@@ -50,38 +38,69 @@ exfiltration-framework/
 
 ---
 
-## Tags
+## Field Dictionary
 
-Tools may include tags to help categorize them by behavior, usage, or context. Examples include:
+### CATEGORIES
 
-**By Origin:**
-- `native`
-- `third-party`
-- `cloud-based`
+General classification of the tool's origin or deployment model.
 
-**By Execution Type:**
-- `cli`
-- `gui`
-- `api`
+- `native` — Built into the OS (e.g., PowerShell, certutil)
+- `third-party` — Tools developed independently from the OS (e.g., rclone, curl)
+- `cloud-based` — Tools designed for use with cloud services or platforms (e.g., AWS CLI)
 
-**By Detection-Relevant Behavior:**
-- `masquerading`
-- `encrypted-transfer`
-- `scheduled-task`
-- `background-execution`
+### PLATFORMS
 
-**By Threat Context:**
+Operating systems supported by the tool.
+
+- `windows`
+- `linux`
+- `macos`
+
+### EXECUTION METHODS
+
+How the tool is typically executed or interfaced with.
+
+- `cli` — Command-line interface
+- `gui` — Graphical user interface
+- `api` — API-based usage (e.g., REST API, SDK)
+- `script` — Indicates that the tool is commonly invoked via external scripts (e.g., PowerShell or Bash), even if it doesn’t have its own scripting language. This flag is retained to distinguish common script-based chaining, although many tools support this.
+
+### CAPABILITIES
+
+Functional capabilities relevant to data exfiltration.
+
+- `file-sync` — Continuous or batched folder synchronization (e.g., Syncthing)
+- `cloud-sync` — Interaction with cloud storage platforms
+- `api-based-transfer` — File transfers using APIs or SDKs
+- `stealth-upload` — Uploads designed to avoid user notification or alerting
+- `remote-access` — Includes remote control functionality (e.g., AnyDesk)
+- `direct-to-cloud` — Sends data directly to cloud endpoints without storing locally
+- `protocol-tunneling` — Can tunnel over other protocols (e.g., SSH over HTTP)
+
+### FORENSIC FIELDS
+
+Expected observable artifacts when the tool is used.
+
+- `BinaryLocations` — Typical paths or known drop locations of the executable
+- `CommandLineArgs` — Common arguments that indicate exfiltration behavior
+- `ConfigFiles` — Paths to configuration or credential files
+- `ScheduledTask` — Tasks that periodically invoke the tool
+- `RegistryPersistence` — Registry keys used for startup persistence
+- `LogFiles` — Known paths of local logs or outputs
+- `NetworkArtifacts` — Observable traffic characteristics (e.g., URLs, domains)
+
+### THREAT ACTORS
+
+Adversaries or threat types known to use the tool.
+
 - `ransomware`
 - `apt`
-- `initial-access`
-- `exfiltration-only`
 
 ---
 
 ## Contributing
 
-Contributions are welcome.  
-If you would like to propose a new tool, improve an existing entry, or suggest new fields or tags, please refer to the contributing guidelines (coming soon).
+Contributions are welcome. If you would like to propose a new tool, improve an existing entry, or suggest new fields, please refer to the `CONTRIBUTING.md`.
 
 ---
 
@@ -91,35 +110,45 @@ To ensure consistency and avoid errors, all tool entries in the `yml/` folder sh
 
 ### Install Requirements
 
-Before running the validation script, install the required Python libraries:
-
-```
+```bash
 pip install pyyaml jsonschema
 ```
 
 ### Run the Validator
 
-From the root of the repository, run:
-
-```
+```bash
 python validate_yml.py
 ```
 
-This will check all .yml files in the yml/ directory (excluding templates and meta files) and print the validation results.
+### Run the Index Generator
+```bash
+python generate-index-json.py
+```
 
-A file is considered invalid if it is missing required fields, contains unsupported tags, or does not conform to the schema.
+---
+
+## Local Frontend Development
+
+```bash
+cd exfiltration-ui
+npm install
+npm run dev
+```
+
+Visit the app in your browser:
+
+```
+http://localhost:5173
+```
 
 ---
 
 ## License
 
-This project is licensed under the Apache License 2.0.  
-See the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache License 2.0. See the LICENSE file for details.
 
 ---
 
 ## Disclaimer
 
-This framework is intended for educational and defensive purposes only.  
-All tools listed are legitimate and not inherently malicious.  
-Their inclusion is based on publicly documented misuse by threat actors.
+This framework is intended for educational and defensive purposes only. All tools listed are legitimate and not inherently malicious. Their inclusion is based on publicly documented misuse by threat actors.

@@ -34,6 +34,10 @@ Forensics:
     - '/usr/bin/pscp'
     - '/usr/local/bin/pscp'
     - '%USERPROFILE%\AppData\Local\Temp\pscp.exe'
+  FileNamePatterns:
+    - pscp\.exe
+    - pscp32\.exe
+    - pscp64\.exe
   CommandLineArgs:
     - '-r'                     # recursive copy of directories
     - '-P'                     # custom SSH port (e.g., -P 2222)

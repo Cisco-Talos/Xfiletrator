@@ -13,27 +13,47 @@ Execution:
   - cli
   - script
 Capabilities:
-  - cloud-sync
-  - encrypted-transfer
-  - stealth-upload
-Stealth:
-  - masquerading
-  - background-execution
-  - encrypted-transfer
-  - proxy-support
+  - cloud-sync               # Supports syncing files with S3 buckets through GUI or CLI.
+  - encrypted-transfer       # Uses HTTPS for secure data transfer to Amazon S3.
+  - silent-execution         # Can run in background or hidden via PowerShell/batch for stealthy exfiltration.
+  - credentialed-upload      # Requires AWS access keys or tokens, often hardcoded or preloaded.
+  - portable-execution       # Can be copied and executed from non-standard or user-writable paths (e.g., %APPDATA%).
 Forensics:
   BinaryLocations:
     - C:\Program Files (x86)\S3 Browser\s3browser-ui.exe
     - C:\Program Files\S3 Browser\s3browser-ui.exe
     - C:\Program Files (x86)\S3 Browser\s3browser-cli.exe
+    - APPDATA\S3Tools\s3browser-ui.exe
+    - TEMP\S3Browser\s3browser-ui.exe
+    - PUBLIC\Tools\S3Browser\s3browser-ui.exe
+  FileNamePatterns:
+    - s3browser-ui\.exe
+    - s3browser-cli\.exe
+    - s3browser\.exe
+  LogFiles:
+    - C:\Users\<user>\AppData\Roaming\S3Browser\logs\
+    - TEMP\s3browser.log
+  CommandLineArgs:
+      - /file upload              # Uploads a file or directory to an S3 bucket.
+      - /account add              # Adds a configured AWS account for exfil operations.
+      - /license                  # Seen in malware samples (e.g., self-extracting droppers).
   ConfigFiles:
     - C:\Users\<user>\AppData\Roaming\S3Browser\s3browser.settings.v4
   ScheduledTask: []
   RegistryPersistence: []
   NetworkArtifacts:
-    - HTTPS connections to AWS S3 endpoints
-    - AWS S3 bucket uploads via CLI
-    - Presence of S3 access keys in process memory
+    Description: >
+      S3 Browser communicates with AWS S3 over HTTPS using the same APIs as legitimate administrative activity.
+      Detection opportunities include monitoring for unusual S3 bucket uploads from user endpoints,
+      large outbound transfers to S3 regions outside the organization’s normal geography,
+      or AWS access keys observed in memory or process command lines.
+    Indicators:
+      - "*.s3.amazonaws.com"
+      - "*.s3.*.amazonaws.com"
+      - "PUT /"                      # File upload operations to S3 buckets
+      - "POST /"                     # Multipart or form-based uploads
+      - "'s3browser.exe' with 'access-key-id' in arguments"
+      - "x-amz-security-token"       # AWS authentication header
 ThreatActors:
   - ransomware
   - apt
@@ -96,5 +116,7 @@ Detection:
 
   - Type: Settings file modification
     Description: Detect unexpected creation or modification of s3browser.settings.v4 outside Program Files paths, which may indicate tampering or portable use.
-
-LastModified: "2025-10-17"
+References:
+  - https://unit42.paloaltonetworks.com/large-scale-cloud-extortion-operation/
+  - https://unit42.paloaltonetworks.com/shinyhunters-ransomware-extortion/
+LastModified: "2025-10-30"

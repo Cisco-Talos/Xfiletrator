@@ -41,9 +41,18 @@ properties:
         items:
           type: string
       CommandLineArgs:
-        type: array
-        items:
-          type: string
+        anyOf:
+          - type: array
+            items:
+              type: string
+          - type: object
+            properties:
+              Description:
+                type: string
+              Indicators:
+                type: array
+                items:
+                  type: string
       ConfigFiles:
         type: array
         items:
@@ -75,9 +84,18 @@ properties:
         items:
           type: string
       NetworkArtifacts:
-        type: array
-        items:
-          type: string
+        anyOf:
+          - type: array
+            items:
+              type: string
+          - type: object
+            properties:
+              Description:
+                type: string
+              Indicators:
+                type: array
+                items:
+                  type: string
     additionalProperties: true
   ThreatActors:
     type: array
@@ -116,4 +134,3 @@ properties:
   LastModified:
     type: string
 additionalProperties: true
-

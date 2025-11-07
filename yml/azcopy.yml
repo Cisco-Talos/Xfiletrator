@@ -1,9 +1,9 @@
 Name: AzCopy
 Description: >
-  AzCopy is a Microsoft command-line tool used to transfer data to and from Azure Blob, File, and Table storage. 
-  It supports high-throughput transfers and is widely used by administrators and DevOps teams. 
-  Threat actors abuse AzCopy and Azure Storage Explorer to exfiltrate sensitive data via trusted cloud endpoints 
-  using SAS tokens or compromised credentials. Due to its flexibility, AzCopy supports stealthy uploads, 
+  AzCopy is a Microsoft command-line tool used to transfer data to and from Azure Blob, File, and Table storage.
+  It supports high-throughput transfers and is widely used by administrators and DevOps teams.
+  Threat actors abuse AzCopy and Azure Storage Explorer to exfiltrate sensitive data via trusted cloud endpoints
+  using SAS tokens or compromised credentials. Due to its flexibility, AzCopy supports stealthy uploads,
   selective exfiltration, and automation via service principals or managed identities.
 Category: cloud-based
 Platform:
@@ -14,14 +14,16 @@ Execution:
   - cli
   - gui
 Capabilities:
-  - cloud-sync
-  - encrypted-transfer
-  - selective-upload
-Stealth:
-  - background-execution
-  - encrypted-transfer
-  - credential-theft
-  - proxy-support
+  - cloud-sync             # Core function: allows syncing data with Azure cloud storage.
+  - encrypted-transfer     # Transfers are encrypted via HTTPS by default.
+  - selective-upload       # Supports filtering uploads via --list-of-files and pattern matching.
+  - background-execution   # Can be run non-interactively or via system processes/scripts.
+  - credential-theft       # Commonly abused via stolen SAS tokens or credentials.
+  - proxy-support          # Can route traffic via proxy, aiding in evasion.
+  - recursive-upload       # Enables uploading entire directory trees.
+  - service-identity       # Allows use of managed identities or service principals.
+  - silent-execution       # Minimal output and logging in certain configurations.
+
 Forensics:
   BinaryLocations:
     - C:\Program Files (x86)\Microsoft SDKs\Azure\AzCopy\AzCopy.exe
@@ -35,26 +37,27 @@ Forensics:
     - azcopy_windows_amd64\.exe
     - azcopy\.exe
     - azcopy_v10\.exe
+
+  CommandLineArgs:
+    Description: These are the most common flags that have been observed to be used by threat actors in the wild.
+    Indicators:
+    - cp                # Copies files to blob. Commonly used by ransomware actors for basic exfiltration. [1][2]
+    - copy              # Same as cp, but removes source files after upload. Used for trace reduction. [1]
+    - --recursive=true  # Ensures all nested files/folders are included in exfiltration, including hidden/subdirs. [3]
   ConfigFiles:
-    - ~/.azcopy/
-  ScheduledTask:
-    - "Windows Task Scheduler"
-    - "cron job"
-  RegistryPersistence:
-    - "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\AzCopy"
-    - "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\AzCopy"
-  NetworkArtifacts:
-    - Outbound HTTPS to *.blob.core.windows.net
-    - High bytes_out over short time
-    - Repeated connections with SAS token in URL
+  - ~/.azcopy/
+NetworkArtifacts:
+  Description: >
+    AzCopy generates outbound HTTPS traffic to Azure Blob Storage endpoints. Detection can focus on:
+    large or bursty transfers, presence of SAS tokens in URIs, and uploads to unusual containers or accounts.
+  Indicators:
+    - '*.blob.core.windows.net'
+    - '*?sv=*'                    # Presence of SAS token in query string
+    - 'PUT /'                     # High volume PUT requests to blob URIs
+    - 'POST /'                    # Used in large multi-part transfers
 ThreatActors:
   - ransomware
   - apt
-Tags:
-  - commonly-used
-  - cloud-tool
-  - stealth
-  - lateral-movement
 UseCases:
   - Title: Standard GUI Upload via Azure Storage Explorer
     Description: >
@@ -133,5 +136,8 @@ Detection:
   - Type: Post-Exfiltration Cleanup
     Description: Flag deletion of local source files immediately after successful AzCopy uploads, which may indicate attempts to remove forensic evidence following data exfiltration.
 
-LastModified: "2025-10-20"
+References:
+- https://www.cisa.gov/news-events/cybersecurity-advisories/aa25-203a
+- https://www.bleepingcomputer.com/news/security/ransomware-gangs-now-abuse-microsoft-azure-tool-for-data-theft/
 
+LastModified: "2025-10-20"

