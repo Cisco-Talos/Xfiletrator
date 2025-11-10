@@ -296,46 +296,40 @@ platforms:
 execution:
   - cli                 # Command-line interface
   - gui                 # Graphical user interface
-  - api                 # API-based usage (e.g., REST API, SDK)
-  - script              # Invoked via script (e.g., batch, bash, ps1)
 
 # =========================
-# CAPABILITIES: Functional capabilities relevant to exfiltration
+# CAPABILITIES: Functional features relevant to exfiltration
 # =========================
 capabilities:
-  - file-sync              # Continuous folder synchronization (e.g., Syncthing, rclone in sync mode)
-  - cloud-sync             # Sync with cloud storage platforms
-  - api-based-transfer     # File transfers initiated via API
-  - stealth-upload         # Designed or abused to quietly upload without alerting the user
-  - remote-access          # Provides full remote access capabilities
-  - direct-to-cloud        # Uploads directly to cloud endpoints without local storage
-  - protocol-tunneling     # Can be used to tunnel traffic over other protocols (e.g., HTTP, DNS)
-
-# =========================
-# STEALTH: Tactics/tools may use to hide behavior or avoid detection
-# =========================
-stealth:
-  - masquerading              # Disguising the tool as a legitimate file or process
-  - encrypted-transfer        # Use of encrypted channels (e.g., TLS) to avoid inspection
-  - api-based-transfer        # Using cloud APIs to mimic legitimate user activity
-  - background-execution      # Running silently in the background or without user interaction
-  - proxy-support             # Can use proxies to hide real IP/destination
-  - port-obfuscation          # Uses non-standard ports or port-hopping
-  - user-agent-manipulation   # Spoofs or manipulates user-agent headers
-  - scriptable                # Easily embedded in larger scripts or malicious chains
+  - file-sync              # Continuous synchronization between folders or systems (e.g., rclone, Syncthing).
+  - cloud-sync             # Sync or upload to cloud storage platforms like S3, Azure Blob, Dropbox.
+  - api-transfer           # Upload via official or custom APIs (e.g., Dropbox API, AWS SDK).
+  - direct-to-cloud        # Exfiltrates data directly to cloud endpoints without local staging.
+  - selective-upload       # Allows filtering or targeting specific file types or directories.
+  - recursive-upload       # Recursively uploads entire folder trees.
+  - credentialed-upload    # Requires or supports authenticated uploads (e.g., tokens, IAM keys).
+  - anonymous-upload       # Supports unauthenticated uploads (e.g., pre-signed URLs or public buckets).
+  - proxy-aware            # Can route traffic through proxies to mask destination.
+  - silent-execution       # Executes without user interaction or visible output (used in scripts or automation).
+  - portable-execution     # Runs from non-standard paths or without installation (portable binaries).
+  - service-identity       # Supports managed identities or service principals (e.g., AzCopy with Azure roles).
+  - user-agent-spoofing    # Can spoof or customize the user-agent string in HTTP requests.
+  - endpoint-override      # Allows setting custom or attacker-controlled endpoints (e.g., `--endpoint-url`).
+  - ftp-upload             # Can exfiltrate via FTP protocol to external servers.
+  - header-exfiltration    # Exfiltrates data inside HTTP headers (e.g., `X-Data:`).
+  - multipart-upload       # Simulates browser-style form uploads (e.g., using `curl -F`).
 
 # =========================
 # FORENSICS: Artifacts and indicators that may appear on a compromised system
 # =========================
 forensics:
-  - custom-config-location    # Uses or allows non-default config file paths
-  - scheduled-task            # Can be triggered via Windows Task Scheduler or cron
-  - registry-persistence      # Persists in Windows Registry (e.g., Run keys)
-  - auto-start-entry          # Creates entries to auto-launch at startup
-  - logs-artifacts            # Leaves logs or known traces
-  - known-binary-location     # Binary typically resides in a known location
-  - suspicious-command-line   # Invoked with arguments commonly seen in attacks
-  - tls-connection            # Initiates encrypted connections over TLS
+  - binary-location           # Known install or execution paths, especially outside standard directories.
+  - config-file-path          # Presence of tool-specific configuration or credential files.
+  - command-line-flags        # Flags or arguments used by attackers to trigger upload, sync, or stealth behavior.
+  - registry-entry            # Registry keys used to auto-launch or persist the tool (Windows only).
+  - scheduled-task-created    # Use of task scheduler or cron to automate tool execution.
+  - log-file-location         # Logs written by the tool that may reveal execution or errors.
+  - network-indicator         # Domain or API patterns associated with this tool’s upload behavior.
 
 # =========================
 # THREAT ACTORS: Types of actors known to abuse the tool
@@ -343,19 +337,6 @@ forensics:
 threat-actors:
   - apt              # Advanced Persistent Threat groups
   - ransomware       # Ransomware gangs or affiliates
-  - redteam          # Used in red teaming / adversary simulation
-  - pentest-tool     # Known or intended for penetration testing
-  - commodity        # Widely used, freely available malware or toolset
 
-# =========================
-# TAGS: Freeform labels for UI filtering or detection enrichment
-# =========================
-tags:
-  - stealth                  # Generic stealth indicator
-  - commonly-used            # Frequently found in real-world incidents
-  - lolbas                   # Appears in LOLBAS or similar reference lists
-  - cloud-tool               # Associated with cloud service interaction
-  - remote-execution         # Enables control or execution from a remote host
-  - persistence              # Capable of maintaining persistence on the system
 
 ```
