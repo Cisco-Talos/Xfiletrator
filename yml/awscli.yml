@@ -109,7 +109,7 @@ Detection:
       Monitor for snapshot creation or backup activity linked to credential misuse or suspicious timing.
       This has been used by ransomware actors for data theft and extortion.
     Sigma: https://github.com/SigmaHQ/sigma/blob/master/rules/cloud/aws/cloudtrail/aws_snapshot_backup_exfiltration.yml
-Testig:
+Testing:
   - https://hackingthe.cloud/aws/post_exploitation/download_tools_and_exfiltrate_data_with_aws_cli/
 References:
 - 1. https://thedfirreport.com/2022/10/17/icedid-to-dagon-ransomware/

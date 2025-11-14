@@ -105,17 +105,31 @@ UseCases:
       wmic process call create "$env:APPDATA\S3Tools\s3browser-ui.exe"
 
 Detection:
-  - Type: Execution from non-standard paths
-    Description: Monitor execution of s3browser-ui.exe or s3browser-cli.exe from user-writable directories such as %APPDATA%, %TEMP%, or %PUBLIC%.
+  - Type: Execution from Non-Standard Path
+    Description: >
+      Monitor for `s3browser-ui.exe` or `s3browser-cli.exe` executed from user-writable locations like `%APPDATA%`, `%TEMP%`, or `%PUBLIC%`.
+      This may indicate the use of a portable version dropped by an attacker.
 
-  - Type: Suspicious parent process
-    Description: Alert on parent processes like PowerShell, cmd, or wmic launching S3 Browser, indicating potential post-exploitation usage.
+  - Type: Suspicious Parent Process
+    Description: >
+      Alert if S3 Browser is launched by LOLBINs such as `powershell.exe`, `wmic.exe`, or `cmd.exe`.
+      These patterns suggest post-exploitation use or automation.
 
-  - Type: File access behavior
-    Description: Watch for access to sensitive directories or AWS credentials shortly before or during execution of S3 Browser.
+  - Type: Network Volume Spike
+    Description: >
+      Detect large or bursty HTTPS traffic to `*.s3.amazonaws.com` or unusual AWS regions from user workstations.
+      Consider monitoring for `PUT` or `POST` operations associated with object uploads.
 
-  - Type: Settings file modification
-    Description: Detect unexpected creation or modification of s3browser.settings.v4 outside Program Files paths, which may indicate tampering or portable use.
+  - Type: Config File Modification
+    Description: >
+      Monitor for unexpected creation or updates to `s3browser.settings.v4` in non-standard paths,
+      especially if no GUI interaction was observed.
+
+  - Type: CLI Upload Usage
+    Description: >
+      Detect command-line invocations of `s3browser-cli.exe` using `/file upload` or `/account add`.
+      This suggests script-based or stealthy exfiltration activity.
+
 References:
   - https://unit42.paloaltonetworks.com/large-scale-cloud-extortion-operation/
   - https://unit42.paloaltonetworks.com/shinyhunters-ransomware-extortion/
