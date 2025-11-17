@@ -50,12 +50,12 @@ Forensics:
   ScheduledTask: []
   RegistryPersistence: []
 
-NetworkArtifacts:
-  Description: >
-    PowerShell-based exfiltration typically leverages HTTP or HTTPS to custom endpoints.
-    These endpoints, domain names, and headers are often attacker-controlled and lack static indicators.
-    As such, no reliable static network indicators are available for Sigma-style detections.
-  Indicators: []
+  NetworkArtifacts:
+    Description: >
+      PowerShell-based exfiltration typically leverages HTTP or HTTPS to custom endpoints.
+      These endpoints, domain names, and headers are often attacker-controlled and lack static indicators.
+      As such, no reliable static network indicators are available for Sigma-style detections.
+    Indicators: []
 
 ThreatActors:
   - ransomware

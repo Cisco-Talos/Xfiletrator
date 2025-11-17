@@ -32,10 +32,10 @@ Forensics:
     - /usr/bin/azcopy
     - /opt/azcopy/azcopy
   FileNamePatterns:
-    - StorageExplorer\.exe
-    - azcopy_windows_amd64\.exe
-    - azcopy\.exe
-    - azcopy_v10\.exe
+    - StorageExplorer.exe
+    - azcopy_windows_amd64.exe
+    - azcopy.exe
+    - azcopy_v10.exe
   CommandLineArgs:
     Description: These are the most common flags that have been observed to be used by threat actors in the wild.
     Indicators:
@@ -44,15 +44,18 @@ Forensics:
       - --recursive=true  # Ensures all nested files/folders are included in exfiltration, including hidden/subdirs. [3]
   ConfigFiles:
     - ~/.azcopy/
-NetworkArtifacts:
-  Description: >
-    AzCopy generates outbound HTTPS traffic to Azure Blob Storage endpoints. Detection can focus on:
-    large or bursty transfers, presence of SAS tokens in URIs, and uploads to unusual containers or accounts.
-  Indicators:
-    - '*.blob.core.windows.net'
-    - '*?sv=*'                    # Presence of SAS token in query string
-    - 'PUT /'                     # High volume PUT requests to blob URIs
-    - 'POST /'                    # Used in large multi-part transfers
+  NetworkArtifacts:
+    Description: >
+      AzCopy generates outbound HTTPS traffic to Azure Blob Storage endpoints. Detection can focus on:
+      large or bursty transfers, presence of SAS tokens in URIs, and uploads to unusual containers or accounts.
+    Indicators:
+      - '*.blob.core.windows.net'
+      - '*?sv=*'                    # Presence of SAS token in query string
+      - 'PUT /'                     # High volume PUT requests to blob URIs
+      - 'POST /'                    # Used in large multi-part transfers
+  RegistryPersistence: []  # azcopy does not natively persist via registry
+  LogFiles: []
+  ScheduledTask: []  # azcopy is not scheduled by default unless abused in automation
 ThreatActors:
   - ransomware
   - apt
