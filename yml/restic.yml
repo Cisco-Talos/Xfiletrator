@@ -15,7 +15,6 @@ Platform:
 
 Execution:
   - cli
-  - script
 
 Capabilities:
   - encrypted-upload           # Data is encrypted before leaving the host by default (AES-256).
@@ -32,9 +31,8 @@ Forensics:
     - '/usr/bin/restic'
     - '/usr/local/bin/restic'
     - '%TEMP%\restic.exe'
-    - './restic.exe'
   FileNamePatterns:
-    - restic\.exe
+    - restic.exe
     - restic
   CommandLineArgs:
     - init                      # Initializes a new backup repository.
@@ -64,12 +62,12 @@ Forensics:
       Connections may be made to cloud storage providers or attacker-controlled endpoints over HTTPS, SFTP, or WebDAV.
       These indicators help correlate restic activity with external data transfers or unauthorized destinations.
     Indicators:
-    - '*.s3.amazonaws.com'
-    - '*.backblazeb2.com'
-    - '*.wasabisys.com'
-    - '*.webdav.*'
-    - 'sftp://*'
-    - 'rest:*'
+      - '*.s3.amazonaws.com'
+      - '*.backblazeb2.com'
+      - '*.wasabisys.com'
+      - '*.webdav.*'
+      - 'sftp://*'
+      - 'rest:*'
 
 ThreatActors:
   - ransomware
@@ -125,4 +123,4 @@ References:
   - https://www.backblaze.com/blog/backblaze-b2-restic-backup/
   - https://www.elastic.co/blog/threat-hunting-for-lolbins-restic
 
-LastModified: "2025-10-30"
+LastModified: '2025-11-17'

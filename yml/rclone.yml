@@ -1,6 +1,4 @@
 Name: rclone
-Aliases:
-  - rclone.exe
 Description: >
   rclone is a command-line program for managing files on cloud storage. It supports over 40 cloud storage providers
   and enables syncing, copying, and transferring data. Adversaries abuse rclone to exfiltrate data due to its ability
@@ -12,7 +10,6 @@ Platform:
   - macOS
 Execution:
   - cli
-  - script
 Capabilities:
   - file-sync
   - encrypted-transfer
@@ -61,10 +58,8 @@ Forensics:
     - ~/.config/rclone/rclone.conf
   ScheduledTask: []
 ThreatActors:
-  - REvil
-  - Quantum
-  - Akira
-  - Conti
+  - ransomware
+  - apt
 
 UseCases:
   - Title: Standard cloud upload
@@ -118,4 +113,4 @@ References:
   - https://www.sentinelone.com/blog/how-rclone-became-a-favorite-tool-for-ransomware-data-exfiltration/
   - https://www.crowdstrike.com/blog/rclone-the-new-threat-for-data-exfiltration/
   - https://unit42.paloaltonetworks.com/threat-assessment-rclone-data-exfiltration/
-LastModified: "2025-09-18"
+LastModified: '2025-11-17'

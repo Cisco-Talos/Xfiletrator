@@ -1,6 +1,6 @@
 Name: Dropbox API
 Description: >
-  Use of Dropbox API for data exfiltration via authenticated HTTPS calls, bypassing the official Dropbox desktop client.
+  Use of the Dropbox Application Programming Interface (API) for data exfiltration via authenticated HTTPS calls, bypassing the official Dropbox desktop client.
 Category: third-party
 Platform:
   - Windows
@@ -46,7 +46,7 @@ Forensics:
 
   ScheduledTask:
     - Name: DropboxExfilTask
-      Description: Executes a script that uploads files via Dropbox API every 15 minutes.
+      Description: Executes a script that uploads files via the Dropbox API every 15 minutes.
       Command: powershell.exe -ExecutionPolicy Bypass -File C:\Users\Public\dropbox_exfil.ps1
     - Name: SystemUpdate
       Description: Masqueraded task triggering Python-based Dropbox exfiltration.
@@ -69,8 +69,8 @@ Forensics:
       Dropbox API traffic occurs over HTTPS, targeting official Dropbox endpoints.
       Detection may include monitoring upload spikes, token-based authentication, or unauthorized Dropbox access.
     Indicators:
-      - api.dropboxapi.com
-      - content.dropboxapi.com
+      - 'api.dropboxapi.com'
+      - 'content.dropboxapi.com'
 
 ThreatActors:
   - ransomware
@@ -104,4 +104,4 @@ References:
   - https://www.huntress.com/blog/using-backup-utilities-for-data-exfiltration
   - https://www.cisa.gov/sites/default/files/publications/cybersecurity-advisory_data-encryption-and-exfiltration-before-ransomware-deployment_2023.pdf
 
-LastModified: "2025-10-30"
+LastModified: '2025-11-17'

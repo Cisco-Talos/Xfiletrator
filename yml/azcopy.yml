@@ -23,7 +23,6 @@ Capabilities:
   - recursive-upload       # Enables uploading entire directory trees.
   - service-identity       # Allows use of managed identities or service principals.
   - silent-execution       # Minimal output and logging in certain configurations.
-
 Forensics:
   BinaryLocations:
     - C:\Program Files (x86)\Microsoft SDKs\Azure\AzCopy\AzCopy.exe
@@ -37,15 +36,14 @@ Forensics:
     - azcopy_windows_amd64\.exe
     - azcopy\.exe
     - azcopy_v10\.exe
-
   CommandLineArgs:
     Description: These are the most common flags that have been observed to be used by threat actors in the wild.
     Indicators:
-    - cp                # Copies files to blob. Commonly used by ransomware actors for basic exfiltration. [1][2]
-    - copy              # Same as cp, but removes source files after upload. Used for trace reduction. [1]
-    - --recursive=true  # Ensures all nested files/folders are included in exfiltration, including hidden/subdirs. [3]
+      - cp                # Copies files to blob. Commonly used by ransomware actors for basic exfiltration. [1][2]
+      - copy              # Same as cp, but removes source files after upload. Used for trace reduction. [1]
+      - --recursive=true  # Ensures all nested files/folders are included in exfiltration, including hidden/subdirs. [3]
   ConfigFiles:
-  - ~/.azcopy/
+    - ~/.azcopy/
 NetworkArtifacts:
   Description: >
     AzCopy generates outbound HTTPS traffic to Azure Blob Storage endpoints. Detection can focus on:
@@ -114,7 +112,7 @@ UseCases:
     Command: |
       azcopy copy ... ; if ($LASTEXITCODE -eq 0) { Remove-Item C:\file -Force }
 
-  - Title: Execution via WMIC or Other LOLBINs
+  - Title: Execution via WMIC or Other Living Off the Land Binaries (LOLBins)
     Description: >
       AzCopy launched via WMIC or other system interpreters to evade detection.
     Command: |
@@ -137,7 +135,7 @@ Detection:
     Description: Flag deletion of local source files immediately after successful AzCopy uploads, which may indicate attempts to remove forensic evidence following data exfiltration.
 
 References:
-- https://www.cisa.gov/news-events/cybersecurity-advisories/aa25-203a
-- https://www.bleepingcomputer.com/news/security/ransomware-gangs-now-abuse-microsoft-azure-tool-for-data-theft/
+  - https://www.cisa.gov/news-events/cybersecurity-advisories/aa25-203a
+  - https://www.bleepingcomputer.com/news/security/ransomware-gangs-now-abuse-microsoft-azure-tool-for-data-theft/
 
-LastModified: "2025-10-20"
+LastModified: '2025-11-17'

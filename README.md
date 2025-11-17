@@ -13,6 +13,32 @@ While these tools are not inherently malicious, they are often repurposed by thr
 
 ---
 
+## YAML Linting & Quality Checks
+
+This project uses [yamllint](https://github.com/adrienverge/yamllint) to enforce consistent YAML formatting and catch common errors in all `.yml` files.
+
+- **Pre-commit hook:**
+  - A pre-commit hook is configured to automatically lint YAML files before every commit. To enable it, run:
+    ```sh
+    pip install pre-commit
+    npm run precommit-install
+    ```
+  - The hook will prevent commits with YAML formatting issues (except for document start, line length, and comment spacing, which are intentionally disabled).
+
+- **GitHub Actions:**
+  - Every push and pull request triggers a GitHub Actions workflow that runs yamllint on all YAML files. This ensures all contributions meet the same quality standards.
+
+- **Manual linting:**
+  - You can manually lint all YAML files at any time with:
+    ```sh
+    yamllint yml/
+    ```
+
+- **Configuration:**
+  - Linting rules are defined in the `.yamllint` file. Some rules (document start, line length, and comment spacing) are disabled to reduce noise and focus on relevant issues.
+
+---
+
 ## Framework Structure
 
 Each tool is documented in its own YAML file, located in the `/yml/` directory. These entries capture:
@@ -24,7 +50,7 @@ Each tool is documented in its own YAML file, located in the `/yml/` directory. 
 - Threat actor usage and external references
 - Tags to support filtering and grouping
 
-This format is designed to support both human review and programmatic consumption (e.g., frontends, automation, detection generation).
+This format is designed to support both human review and programmatic consumption (e.g., frontends, automation, detection generation or AI projects).
 
 ---
 

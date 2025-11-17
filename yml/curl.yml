@@ -53,7 +53,7 @@ Forensics:
   ConfigFiles:
     - ~/.curlrc
     - C:\Users\<user>\.curlrc
-  RegistryPersistence: []
+  RegistryPersistence: [] # curl does not natively persist via registry
   LogFiles:
     - /var/log/syslog
     - ~/.bash_history
@@ -161,4 +161,4 @@ References:
   - https://www.trendmicro.com/en_us/research/23/a/attackers-abuse-native-utilities-for-data-exfiltration.html
   - https://www.mandiant.com/resources/blog/command-line-data-exfiltration
 
-LastModified: "2025-11-07"
+LastModified: '2025-11-17'

@@ -1,6 +1,6 @@
 Name: PowerShell
 Description: >
-  PowerShell is a native Windows shell and scripting engine used for administrative automation.
+  PowerShell is a shell and scripting engine used for administrative automation built into Windows and available for download on macOS and Linux.
   It supports file manipulation, encoding, HTTP methods, and in-memory execution.
   Threat actors abuse PowerShell for fileless data exfiltration via chunked uploads, obfuscated scripts,
   and stealthy communication with C2 endpoints.
@@ -8,6 +8,8 @@ Description: >
 Category: native
 Platform:
   - Windows
+  - macOS
+  - Linux
 Execution:
   - cli
 
@@ -143,4 +145,4 @@ References:
   - https://unit42.paloaltonetworks.com/vice-society-ransomware-powershell/
   - https://www.elastic.co/guide/en/security/8.9/potential-data-exfiltration-through-powershell.html
 
-LastModified: "2025-11-12"
+LastModified: '2025-11-17'

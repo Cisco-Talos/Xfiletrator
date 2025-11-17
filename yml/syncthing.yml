@@ -27,8 +27,8 @@ Forensics:
     - /usr/bin/syncthing
     - /usr/local/bin/syncthing
   FileNamePatterns:
-    - syncthing.exe
-    - syncthing
+    - \syncthing.exe
+    - /syncthing
   CommandLineArgs:
     - --no-console              # Suppress console window on Windows
     - --no-browser              # Do not auto-open the GUI in browser
@@ -109,4 +109,4 @@ References:
   - https://attack.mitre.org/techniques/T1567/002/
   - https://www.huntress.com/blog/using-backup-utilities-for-data-exfiltration
 
-LastModified: "2025-10-30"
+LastModified: '2025-11-17'

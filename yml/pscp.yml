@@ -35,9 +35,9 @@ Forensics:
     - '/usr/local/bin/pscp'
     - '%USERPROFILE%\AppData\Local\Temp\pscp.exe'
   FileNamePatterns:
-    - pscp\.exe
-    - pscp32\.exe
-    - pscp64\.exe
+    - pscp.exe
+    - pscp32.exe
+    - pscp64.exe
   CommandLineArgs:
     - '-r'                     # recursive copy of directories
     - '-P'                     # custom SSH port (e.g., -P 2222)
@@ -120,4 +120,4 @@ Tags:
   - secure-transfer
   - commonly-used
 
-LastModified: "2025-10-24"
+LastModified: '2025-11-17'
