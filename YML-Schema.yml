@@ -57,7 +57,6 @@ properties:
         type: array
         items:
           type: string
-      # ScheduledTask: can be boolean, string, array of strings, OR array of structured task objects
       ScheduledTask:
         anyOf:
           - type: boolean

