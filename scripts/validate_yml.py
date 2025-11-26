@@ -6,6 +6,7 @@ from pathlib import Path
 SCHEMA_PATH = "YML-Schema.yml"
 YML_FOLDER = "yml"
 
+# Top-level fields required in every tool file
 REQUIRED_TOP_FIELDS = [
     "Name",
     "Description",
@@ -14,15 +15,16 @@ REQUIRED_TOP_FIELDS = [
     "Execution",
     "Capabilities",
     "Forensics",
+    "ThreatActors",
     "UseCases",
     "Detection",
     "References",
     "LastModified",
 ]
 
+# Forensics subfields required by schema
 REQUIRED_FORENSICS_FIELDS = [
     "BinaryLocations",
-    "FileNamePatterns",
     "CommandLineArgs",
     "ConfigFiles",
     "RegistryPersistence",
@@ -58,7 +60,7 @@ def validate_required_fields(data, file_path):
 def validate_yml(file_path, schema):
     data = load_yaml(file_path)
 
-    # Validate schema format
+    # Validate structure against JSON schema
     try:
         jsonschema.validate(instance=data, schema=schema)
     except jsonschema.exceptions.ValidationError as e:
@@ -91,3 +93,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

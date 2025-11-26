@@ -5,7 +5,7 @@ Description: >
   and has been abused by ransomware operators to exfiltrate large volumes of data to
   attacker-controlled cloud storage such as Backblaze, Google Drive, or SFTP servers.
 
-Category: 3rd-party
+Category: third-party
 Platform:
 - Windows
 - Linux
