@@ -4,3 +4,12 @@ repos:
     hooks:
       - id: yamllint
         files: \.(yml|yaml)$
+  - repo: local
+    hooks:
+      - id: validate-yml
+        name: Validate YML Structure
+        entry: python scripts/validate_yml.py
+        language: python
+        pass_filenames: false
+        files: ^yml/.*\.yml$
+        additional_dependencies: ['pyyaml', 'jsonschema']

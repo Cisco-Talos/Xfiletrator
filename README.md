@@ -15,27 +15,59 @@ While these tools are not inherently malicious, they are often repurposed by thr
 
 ## YAML Linting & Quality Checks
 
-This project uses [yamllint](https://github.com/adrienverge/yamllint) to enforce consistent YAML formatting and catch common errors in all `.yml` files.
+This project uses automated validation to ensure YAML files are properly formatted and contain all required fields.
 
-- **Pre-commit hook:**
-  - A pre-commit hook is configured to automatically lint YAML files before every commit. To enable it, run:
-    ```sh
-    pip install pre-commit
-    npm run precommit-install
-    ```
-  - The hook will prevent commits with YAML formatting issues (except for document start, line length, and comment spacing, which are intentionally disabled).
+### Two-Layer Validation
 
-- **GitHub Actions:**
-  - Every push and pull request triggers a GitHub Actions workflow that runs yamllint on all YAML files. This ensures all contributions meet the same quality standards.
+1. **Generic YAML Linting** ([yamllint](https://github.com/adrienverge/yamllint))
+   - Enforces consistent YAML formatting
+   - Catches syntax errors and common issues
+   - Configuration in `.yamllint`
 
-- **Manual linting:**
-  - You can manually lint all YAML files at any time with:
-    ```sh
-    yamllint yml/
-    ```
+2. **Custom Schema Validation** (`scripts/validate_yml.py`)
+   - Validates required top-level fields (Name, Description, Category, etc.)
+   - Ensures Forensics section contains all required fields
+   - Validates against project-specific JSON schema
 
-- **Configuration:**
-  - Linting rules are defined in the `.yamllint` file. Some rules (document start, line length, and comment spacing) are disabled to reduce noise and focus on relevant issues.
+### Setup
+
+Install Python dependencies:
+```sh
+pip install -r requirements.txt
+```
+
+Enable pre-commit hooks:
+```sh
+pre-commit install
+```
+
+Or run via npm:
+```sh
+npm run precommit-install
+```
+
+### Running Validation
+
+**Pre-commit (automatic):**
+Both yamllint and custom validation run automatically before each commit.
+
+**Manual testing:**
+```sh
+# Run all validation checks
+./scripts/test-validation.sh
+
+# Or run individually:
+yamllint .
+python scripts/validate_yml.py
+```
+
+**GitHub Actions:**
+Every push and pull request automatically runs both validation checks to ensure quality standards.
+
+### Configuration
+
+- **yamllint rules:** `.yamllint` (document-start, line-length, and comments spacing disabled)
+- **Custom validation:** `scripts/validate_yml.py` and `YML-Schema.yml`
 
 ---
 

@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "postinstall": "pip install yamllint pre-commit || true",
+    "postinstall": "pip install -r requirements.txt && pre-commit install || true",
     "precommit-install": "pre-commit install"
   },
   "dependencies": {
