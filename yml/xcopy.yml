@@ -1,0 +1,120 @@
+Name: xcopy
+Aliases:
+  - xcopy.exe
+  - XCOPY
+Description: >
+  xcopy is a native Windows command-line utility used to copy files and directories, including hidden files and nested folder structures.
+  It supports a wide range of options for recursive copying, filtering, and silent execution. Threat actors commonly abuse xcopy for
+  Collection (Mitre T1074 - Data Staged) by staging files from multiple compromised devices onto a central host before exfiltration.
+  It is also used for Lateral Tool Transfer (Mitre T1570) to move tools between compromised hosts via SMB shares. When combined with
+  'net use' for SMB authentication, xcopy enables efficient lateral data movement across Windows environments with minimal artifacts.
+Category: native
+Platform:
+  - Windows
+Execution:
+  - cli
+Capabilities:
+  - file-copy               # Copy individual files or entire directory structures.
+  - recursive-upload        # Copy directories and subdirectories recursively (/s, /e).
+  - selective-upload        # Filter files by attributes, date, or pattern.
+  - silent-execution        # Execute without displaying individual file names (/q).
+  - hidden-file-copy        # Copy hidden and system files (/h).
+  - smb-transfer            # Transfer files to/from remote SMB shares.
+  - credentialed-upload     # Supports authenticated transfers via 'net use' authentication.
+  - staging-capability      # Used to consolidate data from multiple sources before exfiltration.
+  - lateral-transfer        # Move files and tools between compromised hosts.
+Forensics:
+  BinaryLocations:
+    - C:\Windows\System32\xcopy.exe
+    - C:\Windows\SysWOW64\xcopy.exe
+  FileNamePatterns:
+    - xcopy.exe
+    - xcopy
+  CommandLineArgs:
+    Description: >
+      These command-line arguments are commonly used by threat actors when leveraging xcopy for data staging,
+      collection, and lateral transfer. The /q, /h, and /s switches are particularly indicative of stealthy
+      operations as they enable quiet execution, hidden file copying, and recursive directory operations.
+    Indicators:
+      - /f                    # Display full source and destination file names during copy.
+      - /s                    # Copy directories and subdirectories (except empty ones).
+      - /e                    # Copy directories and subdirectories (including empty ones).
+      - /h                    # Copy hidden and system files.
+      - /q                    # Quiet mode - suppress file name display.
+      - /y                    # Suppress prompting to confirm overwrites.
+      - /k                    # Copy attributes, including read-only.
+      - /d                    # Copy only files changed on or after specified date.
+      - /exclude              # Exclude files matching specified patterns.
+      - \\                    # UNC paths indicating SMB share transfers.
+  ConfigFiles: []
+  RegistryPersistence: []
+  LogFiles:
+    - C:\Windows\System32\winevt\Logs\Microsoft-Windows-SMBClient%4Security.evtx
+    - C:\Windows\System32\winevt\Logs\Security.evtx
+  NetworkArtifacts:
+    Indicators:
+      - SMB/CIFS              # Network protocol used for remote file transfers.
+      - Port 445              # Standard SMB port for file sharing.
+      - Port 139              # NetBIOS SMB port (legacy).
+      - '\\<hostname>\<share>'  # UNC path patterns in command line.
+  ScheduledTask:
+    - Name: DataStaging
+      Description: Scheduled task used to periodically collect and consolidate files from various locations for later exfiltration.
+      Command: 'xcopy C:\Users\*\Documents\*.* \\staging\collection\ /s /h /q /y'
+    - Name: SystemBackupTask
+      Description: Masqueraded scheduled task that runs xcopy to stage data to a remote SMB share.
+      Command: 'schtasks /run /tn "SystemBackupTask"'
+ThreatActors:
+  - apt
+  - ransomware
+UseCases:
+  - Title: Local File System Staging
+    Description: >
+      Copy files from a source directory to a staging location on the local file system, including hidden files
+      and subdirectories, with full file name display for monitoring.
+    Command: |
+      xcopy C:\Temp\500MBtestfile.bin "C:/Users/Administrator/Desktop/$($env:COMPUTERNAME)" /f /s /h /q
+  - Title: Lateral Transfer via SMB with Authentication
+    Description: >
+      Authenticate to a remote SMB share using 'net use', then copy files to the remote host using xcopy.
+      This pattern is commonly observed in threat actor operations for lateral data movement.
+    Command: |
+      net use Z: \\<Computer name>\<SMB Share Name> /user:<domain>\<username> <password>
+      xcopy C:\Temp\500MBtestfile.bin \\<Computer name>\<SMB Share Name>\testfile.bin /f /s /h /q
+  - Title: Recursive Directory Copy to Remote Share
+    Description: >
+      Copy an entire directory tree, including empty directories, to a remote SMB share in quiet mode
+      to minimize visibility.
+    Command: |
+      xcopy C:\Users\Administrator\Documents\* \\fileserver\staging\ /e /h /q /y
+  - Title: Selective File Copy with Date Filter
+    Description: >
+      Copy only files modified after a specific date, useful for collecting recently created or modified files.
+    Command: |
+      xcopy C:\Users\*\Documents\*.docx \\staging\docs\ /d:01-01-2024 /s /h /y
+Detection:
+  - Type: Informational Event
+    Description: >
+      Generate an informational-level alert for any execution of xcopy. This provides baseline visibility into
+      legitimate and potentially malicious usage without ascribing intent. Volume testing showed only 219 xcopy
+      executions in a 1-week period across 2 billion EVM Process Activity events, making this viable for monitoring.
+  - Type: Behavioral - Lateral Transfer with Suspicious Arguments
+    Description: >
+      Detect xcopy execution with command-line arguments indicating lateral file transfer to/from SMB shares,
+      particularly when combined with stealth switches (/q, /h, /s). These arguments have been observed in
+      real-world threat actor campaigns such as ToddyCat and various ransomware operations. Volume testing
+      showed only 50 events matching these criteria in the same 1-week, 2-billion event dataset, indicating
+      low false positive rates.
+References:
+  - https://attack.mitre.org/tactics/TA0009/
+  - https://attack.mitre.org/techniques/T1074/
+  - https://attack.mitre.org/techniques/T1570/
+  - https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/xcopy
+  - https://schema.ocsf.io/
+  - https://securelist.com/toddycat-keep-calm-and-check-logs/110696/
+  - https://www.cisa.gov/news-events/cybersecurity-advisories/aa23-144a
+  - https://www.rapid7.com/blog/post/2023/01/11/increasing-the-sting-of-hive-ransomware/
+  - https://www.sentinelone.com/labs/who-needs-macros-threat-actors-pivot-to-abusing-explorer-and-other-lolbins-via-windows-shortcuts/
+  - https://www.trendmicro.com/vinfo/us/security/news/ransomware-spotlight/ransomware-spotlight-ransomhub
+LastModified: "2025-11-26"
+
