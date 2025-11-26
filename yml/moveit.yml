@@ -1,0 +1,115 @@
+Name: MOVEit Transfer
+Description: >
+  MOVEit Transfer is an enterprise managed file transfer (MFT) platform by Progress Software.
+  In 2023, the CVE-2023-34362 SQL injection vulnerability was exploited as a 0-day by the
+  CL0P ransomware group to deploy the LEMURLOOT web shell directly into the MOVEit webroot.
+  This allowed attackers to authenticate as service accounts and exfiltrate data at scale
+  via MOVEit’s own HTTPS download mechanisms.
+
+Category: third-party
+Platform:
+- Windows
+Execution:
+- gui
+
+Capabilities:
+- authenticated-download      # File downloads tied to legitimate MOVEit users or service accounts.
+- bulk-download               # LEMURLOOT enumerates files/folders and exfiltrates them in large batches.
+- http-exfiltration          # Exfiltration performed over HTTPS via /download endpoints.
+- database-enumeration        # Lists files, folders, institutions, and metadata via SQL queries.
+- abuse-service-accounts      # Attackers create "Health Check Service" accounts (PermissionLevel 30).
+- webshell-execution          # Custom ASP.NET web shell (human2.aspx) used for command & control.
+- stealth-header-auth         # Web shell authenticated via custom HTTP headers (X-siLock-*).
+- silent-execution            # Entire attack is performed through web requests; no endpoint execution.
+
+Forensics:
+  BinaryLocations: []  # MOVEit is a server application, no attacker-launched binary.
+  FileNamePatterns:
+  - human2.aspx
+  - _human2.aspx
+  - .*human.*.aspx  # Suspicious clones of legitimate human.aspx
+  CommandLineArgs:
+    Description: MOVEit is GUI/server-based. Attackers do not use CLI arguments. Indicators refer to web shell actions.
+    Indicators:
+    - 'X-siLock-Comment'        # Authentication key for LEMURLOOT web shell.
+    - 'X-siLock-Step1'          # Deletes existing Health Check Service account.
+    - 'X-siLock-Step2'          # Creates a new high-permission service account + session.
+    - 'X-siLock-Step3'          # Enumerates institutions, folders, and files prior to exfil.
+  NetworkArtifacts:
+    Description: HTTPS download patterns from MOVEit’s /download endpoints.
+    Indicators:
+    - 'GET /human.aspx'                 # Suspicious access patterns preceding exploitation.
+    - 'GET /human2.aspx'                # Web shell masquerading as legitimate page.
+    - 'GET /download?id=*'              # High-volume file downloads.
+    - Multiple FileID/FolderID params   # Bulk enumerations in a single request.
+  ConfigFiles:
+  - C:\MOVEitDMZ\wwwroot\human.aspx
+  - C:\MOVEitDMZ\wwwroot\human2.aspx
+  - MOVEit database config files (varies by deployment)
+  RegistryPersistence: []  # Web shell persists on disk, no registry.
+  LogFiles:
+  - '%SystemDrive%\inetpub\logs\LogFiles\W3SVC*'  # IIS logs for download activity and web shell access.
+  - 'MOVEit database audit table (contains file_download events and session data)'
+  ScheduledTask: []  # No scheduled tasks created.
+
+ThreatActors:
+- ransomware
+
+UseCases:
+  - Title: Bulk file exfiltration through web shell
+    Description: >
+      LEMURLOOT enumerates institutions, folders, and file IDs, then downloads them in mass batches
+      directly through MOVEit’s HTTPS interface, bypassing endpoint controls.
+    Command: 'GET /download?FileID=<id>&FolderID=<id>'
+
+  - Title: Abuse of service accounts for privileged downloads
+    Description: >
+      Attackers delete the default “Health Check Service” account and recreate it with
+      PermissionLevel 30 and Timeout=9999 to perform authenticated mass downloads.
+    Command: 'Header: X-siLock-Step2'
+
+  - Title: Enumeration of MOVEit database contents
+    Description: >
+      The web shell issues SQL-backed enumeration requests to discover all files available
+      for exfiltration, including metadata such as FileName, FolderPath, and InstitutionID.
+    Command: 'Header: X-siLock-Step3'
+
+  - Title: Stealthy exfiltration over legitimate HTTPS traffic
+    Description: >
+      Since MOVEit runs over HTTPS, attackers blend file theft with expected network traffic,
+      making exfiltration appear as normal MFT activity.
+    Command: 'GET /download'
+
+Detection:
+  - Type: Web Shell Indicators
+    Description: >
+      Detect creation or modification of .aspx files in the MOVEit wwwroot directory,
+      especially suspicious clones of human.aspx such as human2.aspx.
+
+  - Type: Anomalous Service Account Usage
+    Description: >
+      Alert when the Health Check Service account is recreated, modified, or granted
+      excessive permissions (e.g., PermissionLevel 30, Timeout=9999).
+
+  - Type: Bulk Downloads via /download
+    Description: >
+      Monitor IIS logs and MOVEit audit logs for high-frequency GET /download requests,
+      multiple FileID/FolderID parameters, or large XferSize values.
+
+  - Type: Suspicious Session Characteristics
+    Description: >
+      Hunt for active sessions in MOVEit’s activesessions table originating from 127.0.0.1,
+      random 16-character usernames, or unusual UserAgent strings.
+
+  - Type: SQLi Exploitation
+    Description: >
+      Correlate abnormal requests to human.aspx with SQL injection indicators or anomalous
+      database activity prior to creation of new service accounts or large downloads.
+
+References:
+- https://www.cisa.gov/news-events/cybersecurity-advisories/aa23-158a
+- https://www.crowdstrike.com/en-us/blog/identifying-data-exfiltration-in-moveit-transfer-investigations/
+- https://fortinet.com/blog/threat-research/moveit-transfer-critical-vulnerability-cve-2023-34362-exploited-as-a-0-day
+- https://en.wikipedia.org/wiki/2023_MOVEit_data_breach
+
+LastModified: '2025-11-24'

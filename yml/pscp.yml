@@ -63,10 +63,7 @@ Forensics:
     - 'One-off or short-lived SSH connections immediately following archive creation'
     - 'High bytes_out associated with scp sessions'
 ThreatActors:
-  - alphv            # BlackCat/ALPHV
-  - lockbit
-  - conti
-  - generic-ransomware
+  - ransomware
 References:
   - 'https://www.trendmicro.com/en_us/research/23/f/malvertising-used-as-entry-vector-for-blackcat-actors-also-lever.html'
   - 'https://www.microsoft.com/en-us/security/blog/2022/10/18/defenders-beware-a-case-for-post-ransomware-investigations/'

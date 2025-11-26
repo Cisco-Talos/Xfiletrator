@@ -70,8 +70,6 @@ Forensics:
       - 'Proxy-Authorization'
   ScheduledTask: []
 ThreatActors:
-  - generic
-Tags:
   - ransomware
   - apt
 UseCases:
