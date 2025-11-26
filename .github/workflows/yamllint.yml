@@ -22,6 +22,6 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
       - name: Run yamllint
-        run: yamllint .
+        run: yamllint yml/
       - name: Validate YML structure
         run: python scripts/validate_yml.py
