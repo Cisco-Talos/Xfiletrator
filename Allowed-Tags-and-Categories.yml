@@ -1,76 +1,67 @@
 # =========================
-# CATEGORIES: General classification of the tool's origin or deployment model
+# CATEGORIES: Origin or deployment model of the tool
 # =========================
 categories:
   - native              # Built into the OS (e.g., PowerShell, certutil)
   - third-party         # Tools developed independently from the OS (e.g., rclone, curl)
-  - cloud-based         # Tools designed for use with cloud services or platforms (e.g., AWS CLI, Dropbox API)
+  - cloud-based         # Tools designed to interact with cloud platforms (e.g., AWS CLI, Dropbox API)
+
 # =========================
 # PLATFORMS: Operating systems supported by the tool
 # =========================
 platforms:
-  - windows             # Microsoft Windows
-  - linux               # Linux distributions
-  - macos               # Apple macOS
+  - windows
+  - linux
+  - macos
+
 # =========================
-# EXECUTION: How the tool is typically executed or interfaced with
+# EXECUTION: How the tool is invoked
+# Allowed values: cli, gui, api
 # =========================
 execution:
-  - cli                 # Command-line interface
-  - gui                 # Graphical user interface
-  - api                 # API-based usage (e.g., REST API, SDK)
-  - script              # Invoked via script (e.g., batch, bash, ps1)
+  - cli
+  - gui
+  - api
+
 # =========================
-# CAPABILITIES: Functional capabilities relevant to exfiltration
+# CAPABILITIES:
+# Functional behaviors relevant to exfiltration, stealth, cloud abuse,
+# and everything previously in "tags" or "stealth".
 # =========================
 capabilities:
-  - file-sync              # Continuous folder synchronization (e.g., Syncthing, rclone in sync mode)
-  - cloud-sync             # Sync with cloud storage platforms
-  - api-based-transfer     # File transfers initiated via API
-  - stealth-upload         # Designed or abused to quietly upload without alerting the user
-  - remote-access          # Provides full remote access capabilities
-  - direct-to-cloud        # Uploads directly to cloud endpoints without local storage
-  - protocol-tunneling     # Can be used to tunnel traffic over other protocols (e.g., HTTP, DNS)
+  - file-sync              # Continuous sync operations
+  - cloud-sync             # Sync with cloud storage providers
+  - api-based-transfer     # File transfers via API calls
+  - stealth-upload         # Quiet/low-visibility uploads
+  - remote-access          # Remote control or file access features
+  - direct-to-cloud        # Direct transfer to cloud targets
+  - protocol-tunneling     # Tunneling over other protocols (HTTP, DNS, etc.)
+  - background-execution   # Can run silently or with no user interaction
+  - proxy-support          # Supports proxies for traffic routing
+  - user-agent-control     # Custom/spoofed User-Agent support
+  - persistence            # Tool can be abused for persistence mechanisms
+  - remote-execution       # Can trigger or execute actions remotely
+  - cloud-tool             # Designed to interact with cloud services
+  - commonly-used          # Frequently observed in real-world incidents
+  - lolbas                 # Appears in LOLBAS/GTFOBins (only if applicable)
+  - data-sync              # Designed for sync/replication workflows
+
 # =========================
-# STEALTH: Tactics/tools may use to hide behavior or avoid detection
-# =========================
-stealth:
-  - masquerading              # Disguising the tool as a legitimate file or process
-  - encrypted-transfer        # Use of encrypted channels (e.g., TLS) to avoid inspection
-  - api-based-transfer        # Using cloud APIs to mimic legitimate user activity
-  - background-execution      # Running silently in the background or without user interaction
-  - proxy-support             # Can use proxies to hide real IP/destination
-  - port-obfuscation          # Uses non-standard ports or port-hopping
-  - user-agent-manipulation   # Spoofs or manipulates user-agent headers
-  - scriptable                # Easily embedded in larger scripts or malicious chains
-# =========================
-# FORENSICS: Artifacts and indicators that may appear on a compromised system
+# FORENSICS: Artifacts and traces left on the system
 # =========================
 forensics:
-  - custom-config-location    # Uses or allows non-default config file paths
-  - scheduled-task            # Can be triggered via Windows Task Scheduler or cron
-  - registry-persistence      # Persists in Windows Registry (e.g., Run keys)
-  - auto-start-entry          # Creates entries to auto-launch at startup
-  - logs-artifacts            # Leaves logs or known traces
-  - known-binary-location     # Binary typically resides in a known location
-  - suspicious-command-line   # Invoked with arguments commonly seen in attacks
-  - tls-connection            # Initiates encrypted connections over TLS
+  - custom-config-location  # Non-default config paths used/allowed
+  - scheduled-task          # May appear in Task Scheduler or cron if abused
+  - registry-persistence    # Run/RunOnce or similar keys (Windows)
+  - auto-start-entry        # Startup entries/services for persistence
+  - logs-artifacts          # Log files or trace artifacts created
+  - known-binary-location   # Binary resides in known or suspicious locations
+  - suspicious-command-line # Common attacker flags or CLI structures
+  - tls-connection          # Encrypted connections hiding data movement
+
 # =========================
-# THREAT ACTORS: Types of actors known to abuse the tool
+# THREAT ACTORS: Restricted to allowed actor categories
 # =========================
 threat-actors:
-  - apt              # Advanced Persistent Threat groups
-  - ransomware       # Ransomware gangs or affiliates
-  - redteam          # Used in red teaming / adversary simulation
-  - pentest-tool     # Known or intended for penetration testing
-  - commodity        # Widely used, freely available malware or toolset
-# =========================
-# TAGS: Freeform labels for UI filtering or detection enrichment
-# =========================
-tags:
-  - stealth                  # Generic stealth indicator
-  - commonly-used            # Frequently found in real-world incidents
-  - lolbas                   # Appears in LOLBAS or similar reference lists
-  - cloud-tool               # Associated with cloud service interaction
-  - remote-execution         # Enables control or execution from a remote host
-  - persistence              # Capable of maintaining persistence on the system
+  - apt
+  - ransomware
