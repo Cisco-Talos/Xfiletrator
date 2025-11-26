@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "postinstall": "pip install yamllint pre-commit || true",
+    "precommit-install": "pre-commit install"
   },
   "dependencies": {
     "js-yaml": "^4.1.0",
@@ -28,6 +30,7 @@
     "globals": "^16.4.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.13",
-    "vite": "^7.1.6"
+    "vite": "^7.1.6",
+    "pre-commit": "^1.2.2"
   }
 }

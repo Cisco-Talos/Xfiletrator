@@ -5,7 +5,6 @@ categories:
   - native              # Built into the OS (e.g., PowerShell, certutil)
   - third-party         # Tools developed independently from the OS (e.g., rclone, curl)
   - cloud-based         # Tools designed for use with cloud services or platforms (e.g., AWS CLI, Dropbox API)
-
 # =========================
 # PLATFORMS: Operating systems supported by the tool
 # =========================
@@ -13,7 +12,6 @@ platforms:
   - windows             # Microsoft Windows
   - linux               # Linux distributions
   - macos               # Apple macOS
-
 # =========================
 # EXECUTION: How the tool is typically executed or interfaced with
 # =========================
@@ -22,7 +20,6 @@ execution:
   - gui                 # Graphical user interface
   - api                 # API-based usage (e.g., REST API, SDK)
   - script              # Invoked via script (e.g., batch, bash, ps1)
-
 # =========================
 # CAPABILITIES: Functional capabilities relevant to exfiltration
 # =========================
@@ -34,7 +31,6 @@ capabilities:
   - remote-access          # Provides full remote access capabilities
   - direct-to-cloud        # Uploads directly to cloud endpoints without local storage
   - protocol-tunneling     # Can be used to tunnel traffic over other protocols (e.g., HTTP, DNS)
-
 # =========================
 # STEALTH: Tactics/tools may use to hide behavior or avoid detection
 # =========================
@@ -47,7 +43,6 @@ stealth:
   - port-obfuscation          # Uses non-standard ports or port-hopping
   - user-agent-manipulation   # Spoofs or manipulates user-agent headers
   - scriptable                # Easily embedded in larger scripts or malicious chains
-
 # =========================
 # FORENSICS: Artifacts and indicators that may appear on a compromised system
 # =========================
@@ -60,7 +55,6 @@ forensics:
   - known-binary-location     # Binary typically resides in a known location
   - suspicious-command-line   # Invoked with arguments commonly seen in attacks
   - tls-connection            # Initiates encrypted connections over TLS
-
 # =========================
 # THREAT ACTORS: Types of actors known to abuse the tool
 # =========================
@@ -70,7 +64,6 @@ threat-actors:
   - redteam          # Used in red teaming / adversary simulation
   - pentest-tool     # Known or intended for penetration testing
   - commodity        # Widely used, freely available malware or toolset
-
 # =========================
 # TAGS: Freeform labels for UI filtering or detection enrichment
 # =========================

