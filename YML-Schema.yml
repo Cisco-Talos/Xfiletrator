@@ -1,42 +1,33 @@
 type: object
-
 required:
   - Name
   - Description
-
 properties:
   Name:
     type: string
-
   Aliases:
     type: array
     items:
       type: string
-
   Description:
     type: string
-
   Category:
     type: string
     enum: ["native", "third-party", "cloud-based"]
-
   Platform:
     type: array
     items:
       type: string
       enum: ["Windows", "Linux", "macOS"]
-
   Execution:
     type: array
     items:
       type: string
       enum: ["cli", "gui", "api"]
-
   Capabilities:
     type: array
     items:
       type: string
-
   Forensics:
     type: object
     properties:
@@ -44,7 +35,6 @@ properties:
         type: array
         items:
           type: string
-
       CommandLineArgs:
         anyOf:
           - type: array
@@ -58,12 +48,10 @@ properties:
                 type: array
                 items:
                   type: string
-
       ConfigFiles:
         type: array
         items:
           type: string
-
       ScheduledTask:
         anyOf:
           - type: boolean
@@ -81,17 +69,14 @@ properties:
                       type: string
                     Command:
                       type: string
-
       RegistryPersistence:
         type: array
         items:
           type: string
-
       LogFiles:
         type: array
         items:
           type: string
-
       NetworkArtifacts:
         anyOf:
           - type: array
@@ -105,20 +90,16 @@ properties:
                 type: array
                 items:
                   type: string
-
     additionalProperties: true
-
   ThreatActors:
     type: array
     items:
       type: string
       enum: ["apt", "ransomware"]
-
   References:
     type: array
     items:
       type: string
-
   UseCases:
     type: array
     items:
@@ -131,7 +112,6 @@ properties:
         Command:
           type: string
       required: ["Title", "Command"]
-
   Detection:
     type: array
     items:
@@ -148,7 +128,6 @@ properties:
               items:
                 type: string
       required: ["Type", "Description"]
-
   LastModified:
     type: string
 
