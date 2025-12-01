@@ -5,7 +5,6 @@ categories:
   - native              # Built into the OS (e.g., PowerShell, certutil)
   - third-party         # Tools developed independently from the OS (e.g., rclone, curl)
   - cloud-based         # Tools designed to interact with cloud platforms (e.g., AWS CLI, Dropbox API)
-
 # =========================
 # PLATFORMS: Operating systems supported by the tool
 # =========================
@@ -13,7 +12,6 @@ platforms:
   - windows
   - linux
   - macos
-
 # =========================
 # EXECUTION: How the tool is invoked
 # Allowed values: cli, gui, api
@@ -22,7 +20,6 @@ execution:
   - cli
   - gui
   - api
-
 # =========================
 # CAPABILITIES:
 # Functional behaviors relevant to exfiltration, stealth, cloud abuse,
@@ -45,7 +42,6 @@ capabilities:
   - commonly-used          # Frequently observed in real-world incidents
   - lolbas                 # Appears in LOLBAS/GTFOBins (only if applicable)
   - data-sync              # Designed for sync/replication workflows
-
 # =========================
 # FORENSICS: Artifacts and traces left on the system
 # =========================
@@ -58,7 +54,6 @@ forensics:
   - known-binary-location   # Binary resides in known or suspicious locations
   - suspicious-command-line # Common attacker flags or CLI structures
   - tls-connection          # Encrypted connections hiding data movement
-
 # =========================
 # THREAT ACTORS: Restricted to allowed actor categories
 # =========================
