@@ -33,6 +33,14 @@ Forensics:
     - Command-line arguments commonly used during exfiltration
   NetworkArtifacts:
     - Observable network indicators (TLS, domains, User-Agent strings)
+NetworkBehavior:
+  Description: >
+    High-level behavioral patterns describing how the tool communicates over the network,
+    such as protocols, connection patterns, sequencing, timing, or notable exfiltration behavior.
+  Behaviors:
+    - Example network behavior (e.g., connects to high ports)
+    - Example protocol usage (e.g., uses HTTPS for API communication)
+    - Example transfer pattern (e.g., sequential uploads during exfiltration)
 ThreatActors:
   - apt
   - ransomware
