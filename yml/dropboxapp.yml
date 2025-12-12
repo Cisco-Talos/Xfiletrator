@@ -1,0 +1,100 @@
+Name: Dropbox App
+Aliases:
+  - Dropbox Client
+  - Dropbox Desktop
+Description: >
+  The Dropbox desktop application is a cloud file synchronization client that automatically uploads and downloads
+  files between a local filesystem and a Dropbox account over HTTPS. Threat actors abuse the Dropbox app for
+  data exfiltration by installing or leveraging an existing client to sync sensitive directories into
+  attacker-controlled Dropbox accounts, blending exfiltration into legitimate background sync activity.
+Category: third-party
+Platform:
+  - Windows
+  - Linux
+  - macOS
+Execution:
+  - gui
+  - cli
+Capabilities:
+  - file-sync                 # Automatically synchronizes local directories with Dropbox cloud storage.
+  - background-execution      # Runs persistently as a background process or service.
+  - encrypted-transfer        # Uses HTTPS/TLS for all data transfers.
+  - bulk-upload               # Capable of syncing large directory trees.
+  - stealth-exfiltration      # Sync traffic blends with legitimate cloud backup activity.
+  - persistence               # Configured to start automatically on user login.
+Forensics:
+  BinaryLocations:
+    - C:\Program Files (x86)\Dropbox\Client\Dropbox.exe
+    - C:\Users\<user>\AppData\Roaming\Dropbox\bin\Dropbox.exe
+    - /Applications/Dropbox.app/Contents/MacOS/Dropbox
+    - ~/.dropbox-dist/dropboxd
+    - /usr/bin/dropbox
+    - /usr/local/bin/dropbox
+  FileNamePatterns:
+    - Dropbox.exe
+    - dropboxd
+    - Dropbox
+  CommandLineArgs:
+    Description: Dropbox desktop client is primarily GUI-driven and does not rely on explicit command-line arguments for file transfers.
+    Indicators:
+      - /install                # Silent installation flag observed in scripted deployments.
+      - /silent                 # Suppresses UI during install or update.
+  ConfigFiles:
+    - C:\Users\<user>\AppData\Roaming\Dropbox\info.json
+    - C:\Users\<user>\AppData\Roaming\Dropbox\host.db
+    - ~/.dropbox/info.json
+    - ~/.dropbox/host.db
+  RegistryPersistence:
+    - HKCU\Software\Microsoft\Windows\CurrentVersion\Run\Dropbox
+  LogFiles:
+    - C:\Users\<user>\AppData\Local\Dropbox\logs\*
+    - ~/.dropbox/logs/dropbox.log
+  NetworkArtifacts:
+    Description: >
+      Dropbox desktop client communicates with fixed Dropbox synchronization endpoints over HTTPS.
+      These domains are consistent and suitable for network-based detection.
+    Indicators:
+      - client.dropbox.com
+      - notify.dropbox.com
+      - block.dropbox.com
+      - content.dropboxapi.com
+  ScheduledTask: []
+NetworkBehavior:
+  Description: >
+    The Dropbox desktop client maintains persistent HTTPS connections to Dropbox infrastructure to
+    monitor file system changes and synchronize content automatically. During abuse, attackers rely
+    on background sync behavior to exfiltrate large volumes of data without explicit user interaction,
+    making activity difficult to distinguish from legitimate backup operations.
+  Behaviors:
+    - Continuous HTTPS connections to Dropbox sync endpoints over port 443
+    - Automatic upload of newly created or modified files within synced directories
+    - Chunked file uploads for large files
+    - Background synchronization without user prompts
+    - Persistence across reboots via auto-start mechanisms
+ThreatActors:
+  - ransomware
+  - apt
+UseCases:
+  - Title: Background Sync Exfiltration
+    Description: Sensitive directories copied into a synced Dropbox folder and exfiltrated automatically.
+    Command: Copy files into local Dropbox sync directory
+  - Title: Abuse of Pre-Installed Dropbox Client
+    Description: Existing Dropbox installation repurposed to sync data to attacker-controlled account.
+    Command: Relink Dropbox client to attacker account
+  - Title: Stealthy Bulk Exfiltration
+    Description: Large directory trees synced gradually to avoid detection.
+    Command: Recursive file copy into Dropbox folder over time
+Detection:
+  - Type: Unauthorized Dropbox Client Usage
+    Description: Detect Dropbox client activity on systems or user accounts where it is not normally present.
+  - Type: Suspicious Sync Scope
+    Description: Alert when high-value directories are added to Dropbox sync paths.
+  - Type: Network Indicator
+    Description: Monitor sustained uploads to Dropbox client endpoints from unexpected hosts.
+  - Type: Persistence
+    Description: Detect Dropbox auto-start registry entries or services created outside normal installation workflows.
+References:
+  - https://help.dropbox.com/installs-integrations/desktop
+  - https://www.cisa.gov/sites/default/files/publications/cybersecurity-advisory_data-encryption-and-exfiltration-before-ransomware-deployment_2023.pdf
+  - https://www.bleepingcomputer.com/news/security/ransomware-gangs-now-use-dropbox-for-data-exfiltration/
+LastModified: '2025-12-12'
