@@ -39,15 +39,15 @@ Forensics:
       - -i                     # Private key file for non-interactive authentication.
       - user@host:path         # SCP-style remote destination syntax.
   ConfigFiles:
-    - %USERPROFILE%\.ssh\id_rsa
-    - %USERPROFILE%\.ssh\known_hosts
+    - USERPROFILE\.ssh\id_rsa
+    - USERPROFILE\.ssh\known_hosts
     - ~/.ssh/id_rsa
     - ~/.ssh/known_hosts
   RegistryPersistence:
     - HKCU\Software\Microsoft\Windows\CurrentVersion\Run\pscp_updater
     - HKLM\Software\Microsoft\Windows\CurrentVersion\Run\pscp_service
   LogFiles:
-    - %TEMP%\pscp-transfer.log
+    - TEMP\pscp-transfer.log
     - C:\Users\<user>\pscp.log
   NetworkArtifacts:
     Description: >
