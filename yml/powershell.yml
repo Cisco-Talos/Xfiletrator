@@ -38,9 +38,9 @@ Forensics:
       - UploadData                   # Method for POSTing raw byte arrays.
       - -Method                      # Specifies HTTP method (GET, POST, PUT).
       - -Body                        # Supplies request body content.
-      - [uri]::EscapeDataString     # URL-encodes data for GET-based exfiltration.
-      - [Convert]::ToBase64String   # Base64-encodes file contents.
-      - [System.IO.File]::ReadAllBytes # Reads files directly into memory.
+      - "[uri]::EscapeDataString"     # URL-encodes data for GET-based exfiltration.
+      - "[Convert]::ToBase64String"   # Base64-encodes file contents.
+      - "[System.IO.File]::ReadAllBytes" # Reads files directly into memory.
   ConfigFiles: []
   RegistryPersistence: []
   LogFiles:
