@@ -39,14 +39,14 @@ Forensics:
       These arguments have been observed in exfiltration activity involving curl, enabling file uploads,
       encoded payloads, or stealth via proxy and header manipulation.
     Indicators:
-      - --data
-      - --data-binary
-      - --upload-file
-      - --request
-      - --header
-      - --form
-      - --proxy
-      - --user-agent
+      - --data                # Sends application/x-www-form-urlencoded data in the request body (often used to embed stolen data).
+      - --data-binary         # Sends raw binary data without modification, commonly used for file exfiltration.
+      - --upload-file         # Uploads a local file using PUT or FTP, a direct exfiltration primitive.
+      - --request             # Overrides HTTP method (e.g., PUT, DELETE) to control upload semantics.
+      - --header              # Injects custom HTTP headers, often abused to hide data or authentication material.
+      - --form                # Sends multipart/form-data, mimicking legitimate browser file uploads.
+      - --proxy               # Routes traffic through an HTTP/SOCKS proxy to obscure destination or bypass controls.
+      - --user-agent          # Spoofs the User-Agent string to blend in with browsers or system utilities.
   ConfigFiles:
     - ~/.curlrc
     - C:\Users\<user>\.curlrc
