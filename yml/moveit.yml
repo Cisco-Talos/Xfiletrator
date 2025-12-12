@@ -46,7 +46,7 @@ Forensics:
     - MOVEit database configuration files
   RegistryPersistence: []       # Persistence achieved via web shell on disk, not registry.
   LogFiles:
-    - %SystemDrive%\inetpub\logs\LogFiles\W3SVC*
+    - SystemDrive\inetpub\logs\LogFiles\W3SVC*
     - MOVEit database audit logs
   ScheduledTask: []
 NetworkBehavior:
