@@ -45,10 +45,10 @@ Forensics:
       - /oneway               # Enforces local-to-remote uploads only.
       - /contact              # References predefined remote storage endpoints.
   ConfigFiles:
-    - %AppData%\Local\GoodSync\server-accounts.tic
-    - %AppData%\Local\GoodSync\GsAcct.tic
-    - %AppData%\Local\GoodSync\jobs-groups-options-*.tic
-    - %AppData%\Local\GoodSync\GoogleDriveCache\google-fs-cache.tic
+    - AppData\Local\GoodSync\server-accounts.tic
+    - AppData\Local\GoodSync\GsAcct.tic
+    - AppData\Local\GoodSync\jobs-groups-options-*.tic
+    - AppData\Local\GoodSync\GoogleDriveCache\google-fs-cache.tic
   RegistryPersistence:
     - HKCU\Software\GoodSync
     - HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\GoodSync
