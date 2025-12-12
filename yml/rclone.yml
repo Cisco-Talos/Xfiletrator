@@ -51,7 +51,7 @@ Forensics:
     - HKLM\Software\Microsoft\Windows\CurrentVersion\Run\rclone_updater
   LogFiles:
     - C:\Users\<username>\AppData\Local\rclone\rclone.log
-    - %TEMP%\rclone-activity.log
+    - TEMP\rclone-activity.log
     - /var/log/rclone.log
   NetworkArtifacts:
     Description: >
