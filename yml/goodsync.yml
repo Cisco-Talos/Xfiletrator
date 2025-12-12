@@ -53,7 +53,7 @@ Forensics:
     - HKCU\Software\GoodSync
     - HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\GoodSync
   LogFiles:
-    - %AppData%\Local\GoodSync\log\GoodSync-YYYYMMDD-HHmm.log
+    - AppData\Local\GoodSync\log\GoodSync-YYYYMMDD-HHmm.log
 NetworkArtifacts:
   Description: >
     GoodSync generates outbound connections to cloud storage providers or remote servers
