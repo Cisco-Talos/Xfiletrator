@@ -91,6 +91,16 @@ properties:
                 items:
                   type: string
     additionalProperties: true
+  NetworkBehavior:
+    type: object
+    properties:
+      Description:
+        type: string
+      Behaviors:
+        type: array
+        items:
+          type: string
+    required: ["Description", "Behaviors"]  
   ThreatActors:
     type: array
     items:
