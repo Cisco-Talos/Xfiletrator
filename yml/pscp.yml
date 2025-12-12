@@ -23,7 +23,7 @@ Forensics:
   BinaryLocations:
     - C:\Program Files\PuTTY\pscp.exe
     - C:\Windows\System32\pscp.exe
-    - %USERPROFILE%\AppData\Local\Temp\pscp.exe
+    - USERPROFILE\AppData\Local\Temp\pscp.exe
     - /usr/bin/pscp
     - /usr/local/bin/pscp
   FileNamePatterns:
