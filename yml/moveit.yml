@@ -45,7 +45,7 @@ Forensics:
     - "C:\\MOVEitDMZ\\wwwroot\\human2.aspx"
   RegistryPersistence: []
   LogFiles:
-    - "%SystemDrive%\inetpub\logs\LogFiles\W3SVC*"
+    - "%SystemDrive%\\inetpub\\logs\\LogFiles\\W3SVC*"
     - "MOVEit database audit logs"
   ScheduledTask: []
 NetworkBehavior:
