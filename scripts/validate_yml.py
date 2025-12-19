@@ -6,7 +6,6 @@ from pathlib import Path
 SCHEMA_PATH = "YML-Schema.yml"
 YML_FOLDER = "yml"
 
-# Top-level fields required in every tool file
 REQUIRED_TOP_FIELDS = [
     "Name",
     "Description",
@@ -15,6 +14,7 @@ REQUIRED_TOP_FIELDS = [
     "Execution",
     "Capabilities",
     "Forensics",
+    "NetworkBehavior",
     "ThreatActors",
     "UseCases",
     "Detection",
@@ -22,15 +22,20 @@ REQUIRED_TOP_FIELDS = [
     "LastModified",
 ]
 
-# Forensics subfields required by schema
 REQUIRED_FORENSICS_FIELDS = [
     "BinaryLocations",
+    "FileNamePatterns",
     "CommandLineArgs",
     "ConfigFiles",
     "RegistryPersistence",
     "LogFiles",
     "NetworkArtifacts",
     "ScheduledTask",
+]
+
+REQUIRED_NETWORK_BEHAVIOR_FIELDS = [
+    "Description",
+    "Behaviors",
 ]
 
 SKIPPED_PREFIXES = ("YML-", "Allowed-", "README")
@@ -55,19 +60,31 @@ def validate_required_fields(data, file_path):
         print(f"✖ MISSING FORENSICS FIELDS in {file_path}:\n→ {missing_forensics}\n")
         return False
 
+    network_behavior = data.get("NetworkBehavior", {})
+    if not isinstance(network_behavior, dict):
+        print(f"✖ INVALID NetworkBehavior type in {file_path} — should be a dictionary\n")
+        return False
+
+    missing_nb = [f for f in REQUIRED_NETWORK_BEHAVIOR_FIELDS if f not in network_behavior]
+    if missing_nb:
+        print(f"✖ MISSING NetworkBehavior FIELDS in {file_path}:\n→ {missing_nb}\n")
+        return False
+
+    if not isinstance(network_behavior.get("Behaviors"), list):
+        print(f"✖ NetworkBehavior.Behaviors must be a list in {file_path}\n")
+        return False
+
     return True
 
 def validate_yml(file_path, schema):
     data = load_yaml(file_path)
 
-    # Validate structure against JSON schema
     try:
         jsonschema.validate(instance=data, schema=schema)
     except jsonschema.exceptions.ValidationError as e:
         print(f"✖ INVALID FORMAT: {file_path}\n→ {e.message}\n")
         return False
 
-    # Validate required field presence
     return validate_required_fields(data, file_path)
 
 def main():
@@ -93,4 +110,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

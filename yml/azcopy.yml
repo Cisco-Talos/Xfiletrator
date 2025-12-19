@@ -56,6 +56,17 @@ Forensics:
   RegistryPersistence: []  # azcopy does not natively persist via registry
   LogFiles: []
   ScheduledTask: []  # azcopy is not scheduled by default unless abused in automation
+NetworkBehavior:
+  Description: >
+    AzCopy performs authenticated HTTPS communications with Azure Storage REST APIs. During abuse,
+    attackers generate sustained outbound HTTPS traffic characterized by large object uploads,
+    recursive directory transfers, and use of SAS tokens or managed identities to avoid interactive login.
+  Behaviors:
+    - HTTPS connections to Azure Blob Storage endpoints over port 443
+    - High-volume PUT and POST requests during bulk uploads
+    - Recursive enumeration followed by sequential object uploads
+    - Use of SAS tokens embedded in request URLs
+    - GUI-driven uploads via Storage Explorer invoking AzCopy job plans
 ThreatActors:
   - ransomware
   - apt
@@ -125,4 +136,4 @@ Detection:
 References:
   - https://www.cisa.gov/news-events/cybersecurity-advisories/aa25-203a
   - https://www.bleepingcomputer.com/news/security/ransomware-gangs-now-abuse-microsoft-azure-tool-for-data-theft/
-LastModified: '2025-11-17'
+LastModified: '2025-12-12'

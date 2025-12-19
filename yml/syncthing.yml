@@ -1,8 +1,10 @@
 Name: Syncthing
 Description: >
-  Syncthing is an open-source file synchronization tool that securely syncs files between devices over the internet or local network.
-  It has been observed in real-world attacks being repurposed by adversaries for automated, stealthy data exfiltration.
-  Once configured, Syncthing can silently synchronize sensitive data with remote attacker-controlled hosts.
+  Syncthing is an open-source peer-to-peer file synchronization tool used to continuously
+  replicate files between devices over local networks or the internet. Although designed
+  for legitimate data synchronization, it has been repurposed by adversaries for automated,
+  stealthy data exfiltration. Once configured, Syncthing can silently synchronize sensitive
+  directories to attacker-controlled systems without requiring further interaction.
 Category: third-party
 Platform:
   - Windows
@@ -13,10 +15,10 @@ Execution:
   - cli
 Capabilities:
   - file-sync              # Continuously synchronizes files and folders across devices.
-  - peer-to-peer           # Direct device-to-device communication.
-  - encrypted-transfer     # TLS encryption over public/unknown networks.
-  - remote-access          # Syncs data with devices not physically present.
-  - silent-execution       # Can run hidden in background without user interaction.
+  - peer-to-peer           # Direct device-to-device communication without central servers.
+  - encrypted-transfer     # TLS-encrypted synchronization channels.
+  - remote-access          # Synchronizes data with off-network or external devices.
+  - silent-execution       # Can run headless or in the background without user interaction.
 Forensics:
   BinaryLocations:
     - C:\Program Files\Syncthing\syncthing.exe
@@ -24,13 +26,13 @@ Forensics:
     - /usr/bin/syncthing
     - /usr/local/bin/syncthing
   FileNamePatterns:
-    - \syncthing.exe
-    - /syncthing
+    - syncthing.exe
+    - syncthing
   CommandLineArgs:
-    - --no-console              # Suppress console window on Windows
-    - --no-browser              # Do not auto-open the GUI in browser
-    - --allow-newer-config      # Accept config from a newer version
-    - --logfile                 # Custom log path
+    - --no-console              # Suppresses console window on Windows.
+    - --no-browser              # Prevents automatic browser UI launch.
+    - --allow-newer-config      # Accepts externally modified configuration files.
+    - --logfile                 # Redirects logs to a custom path.
   ConfigFiles:
     - C:\Users\<user>\AppData\Local\Syncthing\config.xml
     - ~/.config/syncthing/config.xml
@@ -38,61 +40,72 @@ Forensics:
     - HKCU\Software\Microsoft\Windows\CurrentVersion\Run\Syncthing
   LogFiles:
     - C:\Users\<user>\AppData\Local\Syncthing\syncthing.log
-    - ~/.config/syncthing/syncthing.log
+    - ~/.config/syncthing\syncthing.log
   ScheduledTask:
     - Name: SyncthingAutostart
-      Description: Syncthing added to autostart via Task Scheduler to persist after reboot.
+      Description: Syncthing configured to persist via scheduled task at user logon.
       Command: 'C:\Users\<user>\AppData\Local\Syncthing\syncthing.exe --no-console'
   NetworkArtifacts:
     Description: >
-      Syncthing uses dynamic IP discovery and syncs via TLS-encrypted channels. Detection opportunities include
-      observing unusual peer devices, connections to suspicious IPs, or high volume transfers over unexpected ports.
-    Indicators:
-      - Outbound traffic on port 22000 (TCP) or 22067 (UDP)
-      - Syncthing protocol activity over TLS (default)
-      - High bytes_out to new external peers
-      - Connection to unknown Syncthing device ID/IP
+      Syncthing traffic is peer-to-peer, dynamically routed, and encrypted using TLS.
+      Device IDs, IP addresses, ports, and relay infrastructure are environment-specific
+      and attacker-controlled, making static network indicators unsuitable for rules.
+    Indicators: []
+NetworkBehavior:
+  Description: >
+    Syncthing establishes long-lived, encrypted peer-to-peer connections to synchronize
+    configured folders. In malicious use, synchronization typically begins immediately
+    after folder indexing and continues incrementally as files change, enabling near
+    real-time exfiltration without repeated tool execution.
+  Behaviors:
+    - persistent TLS-encrypted peer-to-peer connections
+    - continuous synchronization rather than one-time transfers
+    - high outbound data volume following initial folder scan
+    - synchronization to newly introduced or previously unseen peer devices
+    - background operation without visible user interaction
 ThreatActors:
   - ransomware
   - apt
 UseCases:
-  - Title: Silent Execution with Modified Config
+  - Title: Silent Execution with Headless Configuration
     Description: >
-      Syncthing is launched using flags to avoid console and browser popups. May indicate automated or hidden execution.
+      Syncthing launched without console or browser UI to operate invisibly in the background.
     Command: |
       syncthing.exe --no-console --no-browser
-  - Title: Modified Log File Path
+  - Title: Log Redirection for Evasion
     Description: >
-      Specify a custom log path to avoid writing to default location, hiding operational traces.
+      Logs redirected to a non-standard location to reduce forensic visibility.
     Command: |
       syncthing.exe --logfile "C:\Users\<user>\AppData\Temp\hidden.log"
-  - Title: Added Device for Exfil
+  - Title: Unauthorized Peer Addition
     Description: >
-      A new, unauthorized peer device is added to sync sensitive folders.
+      Attacker-controlled device ID added directly to the configuration to receive synced data.
     Command: |
-      Modified config.xml to include attacker-controlled device ID
-  - Title: Scheduled Execution for Persistence
+      Modified config.xml to include external device ID
+  - Title: Persistence via Scheduled Task
     Description: >
-      Syncthing is configured as a scheduled task to ensure persistence across reboots.
+      Syncthing configured to execute automatically at logon to maintain long-term exfiltration.
     Command: |
       schtasks /Create /TN "SystemUpdate" /TR "syncthing.exe --no-console" /SC ONLOGON /RL HIGHEST
 Detection:
-  - Type: Suspicious Command-Line Options
+  - Type: Silent Execution Flags
     Description: >
-      Monitor use of `--no-console`, `--logfile`, or `--allow-newer-config` which may indicate silent execution or tampering.
-  - Type: New Device Synchronization
+      Detect use of `--no-console`, `--no-browser`, or custom `--logfile` paths indicating
+      non-interactive or stealthy operation.
+  - Type: New Peer Association
     Description: >
-      Alert on synchronization with new devices not previously seen in the network or peer list.
-  - Type: High Volume Sync Activity
+      Alert on synchronization activity involving previously unseen Syncthing device IDs
+      or external peers not approved by policy.
+  - Type: Sustained Outbound Sync Activity
     Description: >
-      Flag high data transfer rates to external IPs over ports 22000/22067 — typical for exfiltration via Syncthing.
+      Identify long-lived outbound connections with continuous data transfer patterns
+      inconsistent with normal user-driven file sharing.
   - Type: Parent Process Anomaly
     Description: >
-      Detect Syncthing launched by unexpected parent processes (e.g., wscript, powershell, onenote).
+      Flag Syncthing launched by unusual parent processes such as scripting engines or
+      document handlers (e.g., powershell.exe, wscript.exe, onenote.exe).
 References:
-  - https://rclone.org/commands/rclone_config/
   - https://thedfirreport.com/2023/04/03/malicious-iso-file-leads-to-domain-wide-ransomware/
-  - https://github.com/redcanaryco/atomic-red-team/blob/master/atomics/T1567.002/T1567.002.md
   - https://attack.mitre.org/techniques/T1567/002/
   - https://www.huntress.com/blog/using-backup-utilities-for-data-exfiltration
-LastModified: '2025-11-17'
+LastModified: '2025-12-12'
