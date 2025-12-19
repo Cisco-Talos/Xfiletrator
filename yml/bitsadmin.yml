@@ -34,7 +34,7 @@ Forensics:
       - '\\<ip>\<share_name>\'
       - 'http://*'
       - 'https://*'
-  RegistryPersistence: 
+  RegistryPersistence:
     - HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\BITS
     - HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\BITS
   LogFiles:
