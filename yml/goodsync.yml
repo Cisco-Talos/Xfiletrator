@@ -45,15 +45,15 @@ Forensics:
       - /oneway
       - /contact
   ConfigFiles:
-    - "AppData\Local\GoodSync\server-accounts.tic"
-    - "AppData\Local\GoodSync\GsAcct.tic"
-    - "AppData\Local\GoodSync\jobs-groups-options-*.tic"
-    - "AppData\Local\GoodSync\GoogleDriveCache\google-fs-cache.tic"
+    - "AppData\\Local\\GoodSync\\server-accounts.tic"
+    - "AppData\\Local\\GoodSync\\GsAcct.tic"
+    - "AppData\\Local\\GoodSync\\jobs-groups-options-*.tic"
+    - "AppData\\Local\\GoodSync\\GoogleDriveCache\\google-fs-cache.tic"
   RegistryPersistence:
-    - "HKCU\Software\GoodSync"
-    - "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\GoodSync"
+    - "HKCU\\Software\\GoodSync"
+    - "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\GoodSync"
   LogFiles:
-    - "AppData\Local\GoodSync\log\GoodSync-YYYYMMDD-HHmm.log"
+    - "AppData\\Local\\GoodSync\\log\\GoodSync-YYYYMMDD-HHmm.log"
   NetworkArtifacts:
     Description: >
       GoodSync generates outbound connections to cloud storage providers or remote servers
