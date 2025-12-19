@@ -26,8 +26,8 @@ Capabilities:
   - persistent-jobs
 Forensics:
   BinaryLocations:
-    - "C:\Program Files\GoodSync\GoodSync.exe"
-    - "C:\Program Files\GoodSync\gsync.exe"
+    - "C:\\Program Files\\GoodSync\\GoodSync.exe"
+    - "C:\\Program Files\\GoodSync\\gsync.exe"
     - "/usr/bin/gsync"
     - "/usr/local/bin/gsync"
   FileNamePatterns:
