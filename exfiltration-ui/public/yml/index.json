@@ -2,8 +2,14 @@
   "awscli.yml",
   "azcopy.yml",
   "curl.yml",
+  "dropboxapi.yml",
+  "goodsync.yml",
+  "moveit.yml",
   "powershell.yml",
+  "pscp.yml",
   "rclone.yml",
+  "restic.yml",
   "s3browser.yml",
-  "syncthing.yml"
+  "syncthing.yml",
+  "xcopy.yml"
 ]
