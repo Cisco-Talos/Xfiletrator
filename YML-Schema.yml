@@ -100,7 +100,7 @@ properties:
         type: array
         items:
           type: string
-    required: ["Description", "Behaviors"]  
+    required: ["Description", "Behaviors"]
   ThreatActors:
     type: array
     items:
@@ -140,5 +140,4 @@ properties:
       required: ["Type", "Description"]
   LastModified:
     type: string
-
 additionalProperties: true
