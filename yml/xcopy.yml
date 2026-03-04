@@ -64,6 +64,19 @@ Forensics:
     - Name: SystemBackupTask
       Description: Masqueraded scheduled task that runs xcopy to stage data to a remote SMB share.
       Command: 'schtasks /run /tn "SystemBackupTask"'
+NetworkBehavior:
+  Description: >
+    xcopy generates SMB/CIFS network traffic when copying files to or from remote UNC paths. During lateral
+    data staging or collection abuse, attackers use xcopy to transfer files between compromised hosts over
+    SMB shares, often using authenticated connections established via 'net use'. This activity is characterized
+    by SMB protocol usage on ports 445 or 139, and can involve large file transfers to staging locations
+    before final exfiltration.
+  Behaviors:
+    - SMB/CIFS connections over port 445 (or legacy port 139) to remote file shares
+    - Authentication via domain credentials or 'net use' mapped drives
+    - Bidirectional file transfer to/from UNC paths (\\hostname\share)
+    - Large-volume recursive directory copies in staging operations
+    - Minimal network visibility when used for local-only staging
 ThreatActors:
   - apt
   - ransomware

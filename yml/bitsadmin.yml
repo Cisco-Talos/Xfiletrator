@@ -50,6 +50,19 @@ Forensics:
       - 'http://*'
       - 'https://*'
   ScheduledTask: []
+NetworkBehavior:
+  Description: >
+    BITSAdmin leverages the Background Intelligent Transfer Service (BITS) to create background file transfer
+    jobs using HTTP, HTTPS, or SMB protocols. During exfiltration abuse, attackers use bitsadmin to upload
+    files to external servers or remote shares with minimal visibility. BITS operates as a system service,
+    making detection reliant on BITS event logs, network flow analysis, and command-line monitoring for
+    suspicious /upload operations.
+  Behaviors:
+    - HTTP/HTTPS POST requests to external or attacker-controlled endpoints
+    - SMB connections to remote UNC paths for file uploads
+    - Background service execution with minimal user interaction
+    - BITS job creation and completion events logged in BITS-Client Operational logs
+    - Outbound file transfers without visible UI or user awareness
 ThreatActors:
   - ransomware
   - apt
