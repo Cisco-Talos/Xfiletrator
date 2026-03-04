@@ -1,4 +1,5 @@
 yamllint
 pyyaml
 jsonschema
+pre-commit
 

