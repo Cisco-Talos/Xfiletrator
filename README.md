@@ -126,7 +126,7 @@ Tools may include tags to help categorize them by behavior, usage, or context. E
 **By Threat Context:**
 - `ransomware`
 - `apt`
-- `exfiltration-only`
+- `no-documented-use-found`
 
 ---
 
